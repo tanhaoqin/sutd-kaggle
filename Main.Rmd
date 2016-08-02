@@ -1,0 +1,40 @@
+---
+title: "Main"
+author: "Tan Hao Qin"
+date: "2 August 2016"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library('mlogit')
+```
+
+## R Markdown
+
+
+```{r cars}
+train <- read.csv('train.csv')
+test <- read.csv('test.csv')
+str(train)
+str(test)
+summary(train)
+summary(test)
+```
+
+```{r train}
+D <- mlogit.data(train, shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
+model1 <- mlogit(Choice~CC+GN+NS+BU+FA+LD+BZ+FC+FP+RP+PP+KA+SC+TS+NV+MA+LB+AF+HU+Price-1, data = D)
+summary(model1)
+```
+
+
+```{r test}
+Test <- mlogit.data(test, shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
+test$income <- lapply(test$income, as.character)
+test$income <- factor(as.character(test$income), levels=levels(train$income))
+```
+
+```{r}
+TestPredict <- predict(model1, newdata = Test)
+```
