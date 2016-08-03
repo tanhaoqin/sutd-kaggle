@@ -16,6 +16,7 @@ library('mlogit')
 ```{r cars}
 train <- read.csv('train.csv')
 test <- read.csv('test.csv')
+submission <- read.csv('samplesubmission.csv')
 str(train)
 str(test)
 summary(train)
@@ -23,18 +24,50 @@ summary(test)
 ```
 
 ```{r train}
-D <- mlogit.data(train, shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
+D <- mlogit.data(subset(train, Task <= 12), shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
 model1 <- mlogit(Choice~CC+GN+NS+BU+FA+LD+BZ+FC+FP+RP+PP+KA+SC+TS+NV+MA+LB+AF+HU+Price-1, data = D)
 summary(model1)
 ```
 
+```{r validate}
+V <- mlogit.data(subset(train, Task > 12), shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
+predict(model1, newdata = V)
+```
 
 ```{r test}
-Test <- mlogit.data(test, shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
 test$income <- lapply(test$income, as.character)
 test$income <- factor(as.character(test$income), levels=levels(train$income))
+Test <- mlogit.data(test, shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
+Test$Ch1 = 0
+Test$Ch2 = 0
+Test$Ch3 = 0
+Test$Ch4 = 0
+Test$Choice = FALSE
 ```
 
 ```{r}
 TestPredict <- predict(model1, newdata = Test)
+Submission1 <- submission
+for (i in 1:length(TestPredict)){
+  for (j in colnames(TestPredict)){
+    Submission1[i,j] = TestPredict[i,j]
+  }
+}?write
+write.csv(Submission1, file = 'Submission1.csv')
+```
+
+```{r model2}
+model2 <- mlogit(Choice~CC+GN+NS+BU+FA+LD+BZ+FC+FP+RP+PP+KA+SC+TS+NV+MA+LB+AF+HU+Price-1, data = D, rpar = c(CC = 'n',  GN = 'n',  NS = 'n',  BU = 'n',  FA = 'n',  LD = 'n',  BZ = 'n',  FC = 'n',  FP = 'n',  RP = 'n',  PP = 'n',  KA = 'n',  SC = 'n',  TS = 'n',  NV = 'n',  MA = 'n',  LB = 'n',  AF = 'n',  HU = 'n', Price = 'n'), panel = TRUE, print.level = TRUE)
+summary(model2)
+```
+
+```{r pred2}
+Pred2 <- predict(model1, newdata = Test)
+Submission1 <- submission
+for (i in 1:length(Pred2)){
+  for (j in colnames(Pred2)){
+    Submission1[i,j] = Pred2[i,j]
+  }
+}
+write.csv(Submission1, file = 'Submission1.csv')
 ```
