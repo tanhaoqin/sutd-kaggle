@@ -36,7 +36,9 @@ predict(model1, newdata = V)
 
 ```{r test}
 test$income <- lapply(test$income, as.character)
-test$income <- factor(as.character(test$income), levels=levels(train$income))
+test$income <- factor(test$income, levels=levels(train$income))
+
+
 Test <- mlogit.data(test, shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
 Test$Ch1 = 0
 Test$Ch2 = 0
@@ -52,7 +54,7 @@ for (i in 1:length(TestPredict)){
   for (j in colnames(TestPredict)){
     Submission1[i,j] = TestPredict[i,j]
   }
-}?write
+}
 write.csv(Submission1, file = 'Submission1.csv')
 ```
 
@@ -70,4 +72,29 @@ for (i in 1:length(Pred2)){
   }
 }
 write.csv(Submission2, file = 'Submission2.csv')
+```
+
+
+
+```{r}
+#TODO: Convert from factors to numerical values
+
+#miles
+
+```
+
+
+```{r}
+train <- read.csv('train.csv')
+#train$gender <- as.character(train$gender)
+#summary(train)
+
+train$gender <- ifelse(train$gender == 'Male', 1, 0)
+
+train$miles <- factor(train$miles, levels = c("Under 50 Miles","51 To 100 Miles","101 To 150 Miles","151 To 200 Miles","201 To 250 Miles","251 To 300 Miles","301 To 350 Miles","351 To 400 Miles","Over 400 Miles"))
+table(train$miles)
+train$miles <- (as.numeric(train$miles)-1)*50 + 25
+table(train$miles)
+train$miles <- ifelse(train$miles == 425, 500, train$miles)
+table(train$miles)
 ```
