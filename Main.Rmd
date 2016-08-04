@@ -25,13 +25,58 @@ summary(test)
 
 ```{r train}
 D <- mlogit.data(subset(train, Task <= 12), shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
+
+V <- mlogit.data(subset(train, Task > 12), shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
+ActualChoice <- subset(train, Task > 12)[,"Choice"]
+```
+
+Simple models
+```{r}
 model1 <- mlogit(Choice~CC+GN+NS+BU+FA+LD+BZ+FC+FP+RP+PP+KA+SC+TS+NV+MA+LB+AF+HU+Price-1, data = D)
 summary(model1)
+
+model3star <- mlogit(Choice~CC+BU+KA+SC+TS+MA+Price-1, data = D)
+summary(model3star)
+
+model2star <- mlogit(Choice~CC+BU+KA+SC+TS+MA+GN+LD+Price-1, data = D)
+summary(model2star)
+
+model1star <- mlogit(Choice~CC+BU+KA+SC+TS+MA+GN+LD+NS+BZ+RP+LB+HU+Price-1, data = D)
+summary(model1star)
 ```
 
 ```{r validate}
-V <- mlogit.data(subset(train, Task > 12), shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
-predict(model1, newdata = V)
+predict1 <- predict(model1, newdata = V)
+predict3star <- predict(model3star, newdata = V)
+predict2star <- predict(model2star, newdata = V)
+predict1star <- predict(model1star, newdata = V)
+
+PredictChoice1 <- apply(predict1, 1, which.max)
+PredictChoice3star <- apply(predict3star, 1, which.max)
+PredictChoice2star <- apply(predict2star, 1, which.max)
+PredictChoice1star <- apply(predict1star, 1, which.max)
+
+t1 <- table(ActualChoice, PredictChoice1)
+t3s <- table(ActualChoice, PredictChoice3star)
+t2s <- table(ActualChoice, PredictChoice2star)
+t1s <- table(ActualChoice, PredictChoice1star)
+
+choiceVector <- vector(mode = "list", length = 4)
+choiceVector[[1]] <- t1
+choiceVector[[2]] <- t3s
+choiceVector[[3]] <- t2s
+choiceVector[[4]] <- t1s
+```
+
+```{r}
+accurate_cnt <- c()
+for(i in 1:4){
+  accurate_cnt <- c(accurate_cnt, 0)
+  for(j in 1:4){
+    accurate_cnt[i] <- accurate_cnt[i] + choiceVector[[i]][j,j]
+  }
+}
+accurate_cnt
 ```
 
 ```{r test}
@@ -56,6 +101,17 @@ for (i in 1:length(TestPredict)){
   }
 }
 write.csv(Submission1, file = 'Submission1.csv')
+```
+
+```{r}
+TestPredict <- predict(model1star, newdata = Test)
+Submission3 <- submission
+for (i in 1:length(TestPredict)){
+  for (j in colnames(TestPredict)){
+    Submission3[i,j] = TestPredict[i,j]
+  }
+}
+write.csv(Submission3, file = 'Submission3.csv')
 ```
 
 ```{r model2}
@@ -97,4 +153,8 @@ train$miles <- (as.numeric(train$miles)-1)*50 + 25
 table(train$miles)
 train$miles <- ifelse(train$miles == 425, 500, train$miles)
 table(train$miles)
+```
+
+```{r}
+
 ```
