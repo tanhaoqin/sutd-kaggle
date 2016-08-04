@@ -62,12 +62,12 @@ summary(model2)
 ```
 
 ```{r pred2}
-Pred2 <- predict(model1, newdata = Test)
-Submission1 <- submission
+Pred2 <- predict(model2, newdata = Test)
+Submission2 <- submission
 for (i in 1:length(Pred2)){
   for (j in colnames(Pred2)){
-    Submission1[i,j] = Pred2[i,j]
+    Submission2[i,j] = Pred2[i,j]
   }
 }
-write.csv(Submission1, file = 'Submission1.csv')
+write.csv(Submission2, file = 'Submission2.csv')
 ```
