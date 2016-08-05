@@ -28,6 +28,7 @@ D <- mlogit.data(subset(train, Task <= 12), shape = 'wide', choice = "Choice", v
 
 V <- mlogit.data(subset(train, Task > 12), shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
 ActualChoice <- subset(train, Task > 12)[,"Choice"]
+
 ```
 
 Simple models
@@ -162,8 +163,25 @@ library(rpart.plot)
 train_split =read.csv("output.csv")
 
 cart1 = rpart(Choice~CC1+GN1+NS1+BU1+FA1+LD1+BZ1+FC1+FP1+RP1+PP1+KA1+SC1+TS1+NV1+MA1+LB1+AF1+HU1+Price1+CC2+GN2+NS2+BU2+FA2+LD2+BZ2+FC2+FP2+RP2+PP2+KA2+SC2+TS2+NV2+MA2+LB2+AF2+HU2+Price2+CC3+GN3+NS3+BU3+FA3+LD3+BZ3+FC3+FP3+RP3+PP3+KA3+SC3+TS3+NV3+MA3+LB3+AF3+HU3+Price3+CC4+GN4+NS4+BU4+FA4+LD4+BZ4+FC4+FP4+RP4+PP4+KA4+SC4+TS4+NV4+MA4+LB4+AF4+HU4+Price4,data=train,method = "class") 
-
 cart2 = rpart(Choice~CC+GN+NS+BU+FA+LD+BZ+FC+FP+RP+PP+KA+SC+TS+NV+MA+LB+AF+HU+Price,data=train_split,method="class") 
+
 prp(cart1)
 prp(cart2)
+```
+
+
+```{r pred4}
+A <- mlogit.data(train, shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
+
+model1A <- mlogit(Choice~CC+GN+NS+BU+FA+LD+BZ+FC+FP+RP+PP+KA+SC+TS+NV+MA+LB+AF+HU+Price-1, data = A)
+summary(model1A)
+
+Pred1A <- predict(model1A, newdata = Test)
+Submission4 <- submission
+for (i in 1:nrow(Pred1A)){
+  for (j in colnames(Pred1A)){
+    Submission4[i,j] = Pred1A[i,j]
+  }
+}
+write.csv(Submission4, file = 'Submission4.csv')
 ```
