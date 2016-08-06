@@ -5,17 +5,18 @@ date: "2 August 2016"
 output: pdf_document
 ---
 
-```{r setup, include=FALSE}
+```{r setup, include=FALSE, error=TRUE}
 knitr::opts_chunk$set(echo = TRUE)
 library('mlogit')
 ```
 
-## R Markdown
+## Read data, always do this
 
 
-```{r cars}
+```{r read cars}
 train <- read.csv('train.csv')
 test <- read.csv('test.csv')
+test2 <- read.csv('test.csv')
 submission <- read.csv('samplesubmission.csv')
 str(train)
 str(test)
@@ -23,16 +24,134 @@ summary(train)
 summary(test)
 ```
 
-```{r train}
+```{r format test data}
+test$income <- lapply(test$income, as.character)
+test$income <- factor(test$income,levels=levels(train$income))
+
+Test <- mlogit.data(test, shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
+Test$Ch1 = 0
+Test$Ch2 = 0
+Test$Ch3 = 0
+Test$Ch4 = 0
+Test$Choice = FALSE
+```
+
+
+```{r format train data wirh factors to numbers}
+train2 <- read.csv('train.csv')
+summary(train2)
+str(train2)
+
+#change gender, male = 1, female = 0
+train2$gender <- ifelse(train2$gender == 'Male', 1, 0)
+
+
+#change miles to avg of range, except over 400 which becomes 500
+train2$miles <- factor(train2$miles, levels = c("Under 50 Miles","51 To 100 Miles","101 To 150 Miles","151 To 200 Miles","201 To 250 Miles","251 To 300 Miles","301 To 350 Miles","351 To 400 Miles","Over 400 Miles"))
+table(train2$miles)
+train2$miles <- (as.numeric(train2$miles)-1)*50 + 25
+table(train2$miles)
+train2$miles <- ifelse(train2$miles == 425, 500, train2$miles)
+table(train2$miles)
+
+#change night percentage to average of range
+train2$night<- factor(train2$night, levels = c("Under 10%","10% To 20%","21% To 30%", "31% To 40%", "41% To 50%","51% To 60%","61% To 70%", "71% To 80%","81% To 90%","91% To 100%" ))
+table(train2$night)
+train2$night <- (as.numeric(train2$night)-1)*10+5
+table(train2$night)
+
+#change age to average of age, except over 60 changed to 70
+train2$age <- factor(train2$age, levels = c("Under 30", "30 To 39", "40 To 49", "50 To 59", "60 & Over"))
+table(train2$age)
+train2$age <- (as.numeric(train2$age)-1)*10+25
+train2$age <- ifelse(train2$age==65, 70, train2$age)
+
+str(train2)
+
+
+#change urbanisation, with Rural/Country = 0, Suburban = 1, Urban/City = 2
+train2$Urb <- ifelse(train2$Urb=="Rural/Country", 0, ifelse(train2$Urb=="Suburban", 1, ifelse(train2$Urb=="Urban/City", 2, train2$Urb)))
+str(train2$Urb)
+str(train2)
+
+
+#change education, Grade School = 0, High School = 1, Trade/Vocational School = 2, Some College (1-3 Years) = 3, College Graduate (4 Years) = 4, Postgraduate College = 5
+#str(train2$educ)
+#summary(train2$educ)
+#head(train2$educ)
+#train2$educ <- as.character(train2$educ)
+#ifelse(train2$educ=="Grade School", 0, train2$educ)
+#ifelse(train2$educ=="High School", 1, train2$educ)
+#ifelse(train2$educ=="Trade/Vocational School", 2, train2$educ)
+#ifelse(train2$educ=="Some College (1-3 Years)", 3, train2$educ)
+#ifelse(train2$educ=="College Graduate (4 Years)", 4, train2$educ)
+#ifelse(train2$educ=="Postgraduate College", 5, train2$educ)
+
+#ifelse(train2$educ=="Grade School", 0, ifelse(train2$educ=="High School", 1, ifelse(train2$educ=="Trade/Vocational School", 2, ifelse(train2$educ=="Some College (1-3 Years)", 3, ifelse(train2$educ=="College Graduate (4 Years)", 4, ifelse(train2$educ=="Postgraduate College", 5, "Other"))))))
+
+
+
+#str(train2$educ)
+#summary(train2$educ)
+#head(train2$educ)
+```
+
+```{r format test with numbers for factors}
+test2$income <- lapply(test2$income, as.character)
+test2$income <- factor(test2$income, levels=levels(train$income))
+
+#change gender, male = 1, female = 0
+test2$gender <- ifelse(test2$gender == 'Male', 1, 0)
+
+
+#change miles to avg of range, except over 400 which becomes 500
+test2$miles <- factor(test2$miles, levels = c("Under 50 Miles","51 To 100 Miles","101 To 150 Miles","151 To 200 Miles","201 To 250 Miles","251 To 300 Miles","301 To 350 Miles","351 To 400 Miles","Over 400 Miles"))
+table(test2$miles)
+test2$miles <- (as.numeric(test2$miles)-1)*50 + 25
+table(test2$miles)
+test2$miles <- ifelse(test2$miles == 425, 500, test2$miles)
+table(test2$miles)
+
+#change night percentage to average of range
+test2$night<- factor(test2$night, levels = c("Under 10%","10% To 20%","21% To 30%", "31% To 40%", "41% To 50%","51% To 60%","61% To 70%", "71% To 80%","81% To 90%","91% To 100%" ))
+table(test2$night)
+test2$night <- (as.numeric(test2$night)-1)*10+5
+table(test2$night)
+
+#change age to average of age, except over 60 changed to 70
+test2$age <- factor(test2$age, levels = c("Under 30", "30 To 39", "40 To 49", "50 To 59", "60 & Over"))
+table(test2$age)
+test2$age <- (as.numeric(test2$age)-1)*10+25
+test2$age <- ifelse(test2$age==65, 70, test2$age)
+
+str(test2)
+
+#change urbanisation, with Rural/Country = 0, Suburban = 1, Urban/City = 2
+test2$Urb <- ifelse(test2$Urb=="Rural/Country", 0, ifelse(test2$Urb=="Suburban", 1, ifelse(test2$Urb=="Urban/City", 2, test2$Urb)))
+str(test2$Urb)
+str(test2)
+
+test2 <- mlogit.data(test2, shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
+test2$Ch1 = 0
+test2$Ch2 = 0
+test2$Ch3 = 0
+test2$Ch4 = 0
+test2$Choice = FALSE
+```
+
+Tasks <= 12 are in D and tasks > 12 are in V
+shape is wide because 4 choices are in the same row
+```{r seperate training data for testing}
+A <- mlogit.data(train, shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
+
 D <- mlogit.data(subset(train, Task <= 12), shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
 
 V <- mlogit.data(subset(train, Task > 12), shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
 ActualChoice <- subset(train, Task > 12)[,"Choice"]
-
 ```
 
-Simple models
-```{r}
+##Simple models
+```{r model1 mlogit}
 model1 <- mlogit(Choice~CC+GN+NS+BU+FA+LD+BZ+FC+FP+RP+PP+KA+SC+TS+NV+MA+LB+AF+HU+Price-1, data = D)
 summary(model1)
 
@@ -69,7 +188,8 @@ choiceVector[[3]] <- t2s
 choiceVector[[4]] <- t1s
 ```
 
-```{r}
+model 1 with all variables is best
+```{r compare accuracy}
 accurate_cnt <- c()
 for(i in 1:4){
   accurate_cnt <- c(accurate_cnt, 0)
@@ -80,20 +200,9 @@ for(i in 1:4){
 accurate_cnt
 ```
 
-```{r test}
-test$income <- lapply(test$income, as.character)
-test$income <- factor(test$income, levels=levels(train$income))
 
 
-Test <- mlogit.data(test, shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
-Test$Ch1 = 0
-Test$Ch2 = 0
-Test$Ch3 = 0
-Test$Ch4 = 0
-Test$Choice = FALSE
-```
-
-```{r}
+```{r pred1 mlogit all variables D data}
 TestPredict <- predict(model1, newdata = Test)
 Submission1 <- submission
 for (i in 1:length(TestPredict)){
@@ -104,7 +213,7 @@ for (i in 1:length(TestPredict)){
 write.csv(Submission1, file = 'Submission1.csv')
 ```
 
-```{r}
+```{r pred3 2nd best mlogit with 1star variables}
 TestPredict <- predict(model1star, newdata = Test)
 Submission3 <- submission
 for (i in 1:length(TestPredict)){
@@ -115,12 +224,12 @@ for (i in 1:length(TestPredict)){
 write.csv(Submission3, file = 'Submission3.csv')
 ```
 
-```{r model2}
+```{r model2 random parameters}
 model2 <- mlogit(Choice~CC+GN+NS+BU+FA+LD+BZ+FC+FP+RP+PP+KA+SC+TS+NV+MA+LB+AF+HU+Price-1, data = D, rpar = c(CC = 'n',  GN = 'n',  NS = 'n',  BU = 'n',  FA = 'n',  LD = 'n',  BZ = 'n',  FC = 'n',  FP = 'n',  RP = 'n',  PP = 'n',  KA = 'n',  SC = 'n',  TS = 'n',  NV = 'n',  MA = 'n',  LB = 'n',  AF = 'n',  HU = 'n', Price = 'n'), panel = TRUE, print.level = TRUE)
 summary(model2)
 ```
 
-```{r pred2}
+```{r pred2 random parameter}
 Pred2 <- predict(model2, newdata = Test)
 Submission2 <- submission
 for (i in 1:length(Pred2)){
@@ -133,89 +242,7 @@ write.csv(Submission2, file = 'Submission2.csv')
 
 
 
-```{r}
-#TODO: Convert from factors to numerical values
-
-#miles
-
-```
-
-
-```{r}
-train <- read.csv('train.csv')
-summary(train)
-str(train)
-
-#change gender, male = 1, female = 0
-train$gender <- ifelse(train$gender == 'Male', 1, 0)
-
-#change miles to avg of range, except over 400 which becomes 500
-train$miles <- factor(train$miles, levels = c("Under 50 Miles","51 To 100 Miles","101 To 150 Miles","151 To 200 Miles","201 To 250 Miles","251 To 300 Miles","301 To 350 Miles","351 To 400 Miles","Over 400 Miles"))
-table(train$miles)
-train$miles <- (as.numeric(train$miles)-1)*50 + 25
-table(train$miles)
-train$miles <- ifelse(train$miles == 425, 500, train$miles)
-table(train$miles)
-<<<<<<< HEAD
-<<<<<<< HEAD
-
-#change night percentage to average of range
-train$night<- factor(train$night, levels = c("Under 10%","10% To 20%","21% To 30%", "31% To 40%", "41% To 50%","51% To 60%","61% To 70%", "71% To 80%","81% To 90%","91% To 100%" ))
-table(train$night)
-train$night <- (as.numeric(train$night)-1)*10+5
-table(train$night)
-
-#change age to average of age, except over 60 changed to 70
-train$age <- factor(train$age, levels = c("Under 30", "30 To 39", "40 To 49", "50 To 59", "60 & Over"))
-table(train$age)
-train$age <- (as.numeric(train$age)-1)*10+25
-train$age <- ifelse(train$age==65, 70, train$age)
-
-str(train)
-
-
-#change urbanisation, with Rural/Country = 0, Suburban = 1, Urban/City = 2
-train$Urb <- ifelse(train$Urb=="Rural/Country", 0, ifelse(train$Urb=="Suburban", 1, ifelse(train$Urb=="Urban/City", 2, train$Urb)))
-str(train$Urb)
-str(train)
-
-#change education, Grade School = 0, High School = 1, Trade/Vocational School = 2, Some College (1-3 Years) = 3, College Graduate (4 Years) = 4, Postgraduate College = 5
-#str(train$educ)
-#summary(train$educ)
-#head(train$educ)
-#train$educ <- as.character(train$educ)
-#ifelse(train$educ=="Grade School", 0, train$educ)
-#ifelse(train$educ=="High School", 1, train$educ)
-#ifelse(train$educ=="Trade/Vocational School", 2, train$educ)
-#ifelse(train$educ=="Some College (1-3 Years)", 3, train$educ)
-#ifelse(train$educ=="College Graduate (4 Years)", 4, train$educ)
-#ifelse(train$educ=="Postgraduate College", 5, train$educ)
-
-#ifelse(train$educ=="Grade School", 0, ifelse(train$educ=="High School", 1, ifelse(train$educ=="Trade/Vocational School", 2, ifelse(train$educ=="Some College (1-3 Years)", 3, ifelse(train$educ=="College Graduate (4 Years)", 4, ifelse(train$educ=="Postgraduate College", 5, "Other"))))))
-
-
-
-#str(train$educ)
-#summary(train$educ)
-#head(train$educ)
-```
-```
-
-```{r cart}
-library(rpart)
-library(rpart.plot)
-
-train_split =read.csv("output.csv")
-
-cart1 = rpart(Choice~CC1+GN1+NS1+BU1+FA1+LD1+BZ1+FC1+FP1+RP1+PP1+KA1+SC1+TS1+NV1+MA1+LB1+AF1+HU1+Price1+CC2+GN2+NS2+BU2+FA2+LD2+BZ2+FC2+FP2+RP2+PP2+KA2+SC2+TS2+NV2+MA2+LB2+AF2+HU2+Price2+CC3+GN3+NS3+BU3+FA3+LD3+BZ3+FC3+FP3+RP3+PP3+KA3+SC3+TS3+NV3+MA3+LB3+AF3+HU3+Price3+CC4+GN4+NS4+BU4+FA4+LD4+BZ4+FC4+FP4+RP4+PP4+KA4+SC4+TS4+NV4+MA4+LB4+AF4+HU4+Price4,data=train,method = "class") 
-cart2 = rpart(Choice~CC+GN+NS+BU+FA+LD+BZ+FC+FP+RP+PP+KA+SC+TS+NV+MA+LB+AF+HU+Price,data=train_split,method="class") 
-
-prp(cart1)
-prp(cart2)
-```
-
-
-```{r pred4}
+```{r pred4 mlogit with A data}
 A <- mlogit.data(train, shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
 
 model1A <- mlogit(Choice~CC+GN+NS+BU+FA+LD+BZ+FC+FP+RP+PP+KA+SC+TS+NV+MA+LB+AF+HU+Price-1, data = A)
@@ -230,3 +257,42 @@ for (i in 1:nrow(Pred1A)){
 }
 write.csv(Submission4, file = 'Submission4.csv')
 ```
+
+```{r pred5&6 mlogit with numerical factor data}
+
+A <- mlogit.data(train, shape = 'wide', choice = "Choice", varying = c(c(4:83)), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
+
+model1A <- mlogit(Choice~CC+GN+NS+BU+FA+LD+BZ+FC+FP+RP+PP+KA+SC+TS+NV+MA+LB+AF+HU+Price-1 | gender+miles+night+age+Urb, data = A)
+summary(model1A)
+
+Pred1A <- predict(model1A, newdata = Test)
+Submission6 <- submission
+for (i in 1:nrow(Pred1A)){
+  for (j in colnames(Pred1A)){
+    Submission6[i,j] = Pred1A[i,j]
+  }
+}
+write.csv(Submission6, file = 'Submission6.csv')
+
+```
+
+
+##CART
+
+```{r cart}
+library(rpart)
+library(rpart.plot)
+
+train_split =read.csv("output.csv")
+
+cart1 = rpart(Choice~CC1+GN1+NS1+BU1+FA1+LD1+BZ1+FC1+FP1+RP1+PP1+KA1+SC1+TS1+NV1+MA1+LB1+AF1+HU1+Price1+CC2+GN2+NS2+BU2+FA2+LD2+BZ2+FC2+FP2+RP2+PP2+KA2+SC2+TS2+NV2+MA2+LB2+AF2+HU2+Price2+CC3+GN3+NS3+BU3+FA3+LD3+BZ3+FC3+FP3+RP3+PP3+KA3+SC3+TS3+NV3+MA3+LB3+AF3+HU3+Price3+CC4+GN4+NS4+BU4+FA4+LD4+BZ4+FC4+FP4+RP4+PP4+KA4+SC4+TS4+NV4+MA4+LB4+AF4+HU4+Price4,data=train,method = "class") 
+cart2 = rpart(Choice~CC+GN+NS+BU+FA+LD+BZ+FC+FP+RP+PP+KA+SC+TS+NV+MA+LB+AF+HU+Price,data=train_split,method="class") 
+
+prp(cart1)
+prp(cart2)
+```
+
+```{r}
+
+```
+
