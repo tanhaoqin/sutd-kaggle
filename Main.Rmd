@@ -25,13 +25,59 @@ summary(test)
 
 ```{r train}
 D <- mlogit.data(subset(train, Task <= 12), shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
+
+V <- mlogit.data(subset(train, Task > 12), shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
+ActualChoice <- subset(train, Task > 12)[,"Choice"]
+
+```
+
+Simple models
+```{r}
 model1 <- mlogit(Choice~CC+GN+NS+BU+FA+LD+BZ+FC+FP+RP+PP+KA+SC+TS+NV+MA+LB+AF+HU+Price-1, data = D)
 summary(model1)
+
+model3star <- mlogit(Choice~CC+BU+KA+SC+TS+MA+Price-1, data = D)
+summary(model3star)
+
+model2star <- mlogit(Choice~CC+BU+KA+SC+TS+MA+GN+LD+Price-1, data = D)
+summary(model2star)
+
+model1star <- mlogit(Choice~CC+BU+KA+SC+TS+MA+GN+LD+NS+BZ+RP+LB+HU+Price-1, data = D)
+summary(model1star)
 ```
 
 ```{r validate}
-V <- mlogit.data(subset(train, Task > 12), shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
-predict(model1, newdata = V)
+predict1 <- predict(model1, newdata = V)
+predict3star <- predict(model3star, newdata = V)
+predict2star <- predict(model2star, newdata = V)
+predict1star <- predict(model1star, newdata = V)
+
+PredictChoice1 <- apply(predict1, 1, which.max)
+PredictChoice3star <- apply(predict3star, 1, which.max)
+PredictChoice2star <- apply(predict2star, 1, which.max)
+PredictChoice1star <- apply(predict1star, 1, which.max)
+
+t1 <- table(ActualChoice, PredictChoice1)
+t3s <- table(ActualChoice, PredictChoice3star)
+t2s <- table(ActualChoice, PredictChoice2star)
+t1s <- table(ActualChoice, PredictChoice1star)
+
+choiceVector <- vector(mode = "list", length = 4)
+choiceVector[[1]] <- t1
+choiceVector[[2]] <- t3s
+choiceVector[[3]] <- t2s
+choiceVector[[4]] <- t1s
+```
+
+```{r}
+accurate_cnt <- c()
+for(i in 1:4){
+  accurate_cnt <- c(accurate_cnt, 0)
+  for(j in 1:4){
+    accurate_cnt[i] <- accurate_cnt[i] + choiceVector[[i]][j,j]
+  }
+}
+accurate_cnt
 ```
 
 ```{r test}
@@ -56,6 +102,17 @@ for (i in 1:length(TestPredict)){
   }
 }
 write.csv(Submission1, file = 'Submission1.csv')
+```
+
+```{r}
+TestPredict <- predict(model1star, newdata = Test)
+Submission3 <- submission
+for (i in 1:length(TestPredict)){
+  for (j in colnames(TestPredict)){
+    Submission3[i,j] = TestPredict[i,j]
+  }
+}
+write.csv(Submission3, file = 'Submission3.csv')
 ```
 
 ```{r model2}
@@ -99,6 +156,7 @@ train$miles <- (as.numeric(train$miles)-1)*50 + 25
 table(train$miles)
 train$miles <- ifelse(train$miles == 425, 500, train$miles)
 table(train$miles)
+<<<<<<< HEAD
 
 #change night percentage to average of range
 train$night<- factor(train$night, levels = c("Under 10%","10% To 20%","21% To 30%", "31% To 40%", "41% To 50%","51% To 60%","61% To 70%", "71% To 80%","81% To 90%","91% To 100%" ))
@@ -140,3 +198,36 @@ str(train)
 #summary(train$educ)
 #head(train$educ)
 ```
+=======
+```
+
+```{r cart}
+library(rpart)
+library(rpart.plot)
+
+train_split =read.csv("output.csv")
+
+cart1 = rpart(Choice~CC1+GN1+NS1+BU1+FA1+LD1+BZ1+FC1+FP1+RP1+PP1+KA1+SC1+TS1+NV1+MA1+LB1+AF1+HU1+Price1+CC2+GN2+NS2+BU2+FA2+LD2+BZ2+FC2+FP2+RP2+PP2+KA2+SC2+TS2+NV2+MA2+LB2+AF2+HU2+Price2+CC3+GN3+NS3+BU3+FA3+LD3+BZ3+FC3+FP3+RP3+PP3+KA3+SC3+TS3+NV3+MA3+LB3+AF3+HU3+Price3+CC4+GN4+NS4+BU4+FA4+LD4+BZ4+FC4+FP4+RP4+PP4+KA4+SC4+TS4+NV4+MA4+LB4+AF4+HU4+Price4,data=train,method = "class") 
+cart2 = rpart(Choice~CC+GN+NS+BU+FA+LD+BZ+FC+FP+RP+PP+KA+SC+TS+NV+MA+LB+AF+HU+Price,data=train_split,method="class") 
+
+prp(cart1)
+prp(cart2)
+```
+
+
+```{r pred4}
+A <- mlogit.data(train, shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
+
+model1A <- mlogit(Choice~CC+GN+NS+BU+FA+LD+BZ+FC+FP+RP+PP+KA+SC+TS+NV+MA+LB+AF+HU+Price-1, data = A)
+summary(model1A)
+
+Pred1A <- predict(model1A, newdata = Test)
+Submission4 <- submission
+for (i in 1:nrow(Pred1A)){
+  for (j in colnames(Pred1A)){
+    Submission4[i,j] = Pred1A[i,j]
+  }
+}
+write.csv(Submission4, file = 'Submission4.csv')
+```
+>>>>>>> origin/master
