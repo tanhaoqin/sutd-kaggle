@@ -86,15 +86,57 @@ write.csv(Submission2, file = 'Submission2.csv')
 
 ```{r}
 train <- read.csv('train.csv')
-#train$gender <- as.character(train$gender)
-#summary(train)
+summary(train)
+str(train)
 
+#change gender, male = 1, female = 0
 train$gender <- ifelse(train$gender == 'Male', 1, 0)
 
+#change miles to avg of range, except over 400 which becomes 500
 train$miles <- factor(train$miles, levels = c("Under 50 Miles","51 To 100 Miles","101 To 150 Miles","151 To 200 Miles","201 To 250 Miles","251 To 300 Miles","301 To 350 Miles","351 To 400 Miles","Over 400 Miles"))
 table(train$miles)
 train$miles <- (as.numeric(train$miles)-1)*50 + 25
 table(train$miles)
 train$miles <- ifelse(train$miles == 425, 500, train$miles)
 table(train$miles)
+
+#change night percentage to average of range
+train$night<- factor(train$night, levels = c("Under 10%","10% To 20%","21% To 30%", "31% To 40%", "41% To 50%","51% To 60%","61% To 70%", "71% To 80%","81% To 90%","91% To 100%" ))
+table(train$night)
+train$night <- (as.numeric(train$night)-1)*10+5
+table(train$night)
+
+#change age to average of age, except over 60 changed to 70
+train$age <- factor(train$age, levels = c("Under 30", "30 To 39", "40 To 49", "50 To 59", "60 & Over"))
+table(train$age)
+train$age <- (as.numeric(train$age)-1)*10+25
+train$age <- ifelse(train$age==65, 70, train$age)
+
+str(train)
+
+
+#change urbanisation, with Rural/Country = 0, Suburban = 1, Urban/City = 2
+train$Urb <- ifelse(train$Urb=="Rural/Country", 0, ifelse(train$Urb=="Suburban", 1, ifelse(train$Urb=="Urban/City", 2, train$Urb)))
+str(train$Urb)
+str(train)
+
+#change education, Grade School = 0, High School = 1, Trade/Vocational School = 2, Some College (1-3 Years) = 3, College Graduate (4 Years) = 4, Postgraduate College = 5
+#str(train$educ)
+#summary(train$educ)
+#head(train$educ)
+#train$educ <- as.character(train$educ)
+#ifelse(train$educ=="Grade School", 0, train$educ)
+#ifelse(train$educ=="High School", 1, train$educ)
+#ifelse(train$educ=="Trade/Vocational School", 2, train$educ)
+#ifelse(train$educ=="Some College (1-3 Years)", 3, train$educ)
+#ifelse(train$educ=="College Graduate (4 Years)", 4, train$educ)
+#ifelse(train$educ=="Postgraduate College", 5, train$educ)
+
+#ifelse(train$educ=="Grade School", 0, ifelse(train$educ=="High School", 1, ifelse(train$educ=="Trade/Vocational School", 2, ifelse(train$educ=="Some College (1-3 Years)", 3, ifelse(train$educ=="College Graduate (4 Years)", 4, ifelse(train$educ=="Postgraduate College", 5, "Other"))))))
+
+
+
+#str(train$educ)
+#summary(train$educ)
+#head(train$educ)
 ```
