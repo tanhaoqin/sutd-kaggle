@@ -37,7 +37,7 @@ Test$Choice = FALSE
 ```
 
 
-```{r format train data wirh factors to numbers}
+```{r format train data with factors to numbers}
 train2 <- read.csv('train.csv')
 summary(train2)
 str(train2)
@@ -76,24 +76,39 @@ str(train2)
 
 
 #change education, Grade School = 0, High School = 1, Trade/Vocational School = 2, Some College (1-3 Years) = 3, College Graduate (4 Years) = 4, Postgraduate College = 5
-#str(train2$educ)
-#summary(train2$educ)
-#head(train2$educ)
-#train2$educ <- as.character(train2$educ)
-#ifelse(train2$educ=="Grade School", 0, train2$educ)
-#ifelse(train2$educ=="High School", 1, train2$educ)
-#ifelse(train2$educ=="Trade/Vocational School", 2, train2$educ)
-#ifelse(train2$educ=="Some College (1-3 Years)", 3, train2$educ)
-#ifelse(train2$educ=="College Graduate (4 Years)", 4, train2$educ)
-#ifelse(train2$educ=="Postgraduate College", 5, train2$educ)
 
-#ifelse(train2$educ=="Grade School", 0, ifelse(train2$educ=="High School", 1, ifelse(train2$educ=="Trade/Vocational School", 2, ifelse(train2$educ=="Some College (1-3 Years)", 3, ifelse(train2$educ=="College Graduate (4 Years)", 4, ifelse(train2$educ=="Postgraduate College", 5, "Other"))))))
+train2$educ <- as.character(train2$educ)
 
+ifelse(train2$educ=="Grade School", 0, ifelse(train2$educ=="High School", 1, ifelse(train2$educ=="Trade/Vocational School", 2, ifelse(train2$educ=="Some College (1-3 Years)", 3, ifelse(train2$educ=="College Graduate (4 Years)", 4, ifelse(train2$educ=="Postgraduate College", 5, train2$educ))))))
 
+train2$educ <- as.numeric(train$educ)
+str(train2$educ)
 
-#str(train2$educ)
-#summary(train2$educ)
-#head(train2$educ)
+str(train2)
+
+# change income to average of range
+summary(train2$income)
+
+train2$income <- factor(train2$income, levels = c("Under $29,999", "$30,000 to $39,999", "$40,000 to $49,999", "$50,000 to $59,999", "$60,000 to $69,999", "$70,000 to $79,999", "$80,000 to $89,999", "$90,000 to $99,999","$100,000 to $109,999", "$110,000 to $119,999", "$120,000 to $129,999", "$130,000 to $139,999", "$140,000 to $149,999", "$150,000 to $159,999", "$160,000 to $169,999", "$170,000 to $179,999", "$180,000 to $189,999", "$190,000 to $199,999", "$200,000 to $209,999", "$210,000 to $219,999", "$220,000 to $229,999","$230,000 to $239,999", "$240,000 to $249,999", "$250,000 to $259,999", "$260,000 to $269,999", "$270,000 to $279,999", "$280,000 to 2$89,999", "$290,000 to $299,999", "$300,000 & Over"))
+
+table(train2$income)
+train2$income <- (as.numeric(train$income)-1)*10000+25000
+train2$income <- ifelse(train2$income==25000, 20000, ifelse(train2$income==245000, 250000, train2$income))
+
+str(train2)
+
+#change parking frequency to number of times per year
+summary(train2$ppark)
+head(train2$ppark)
+
+train2$ppark <- as.character(train2$ppark)
+train2$ppark <- factor(train2$ppark, levels = c("Never", "Yearly", "Monthly", "Weekly",  "Daily"))
+train2$ppark <- ifelse(train2$ppark == "Never", 0, ifelse(train2$ppark =="Yearly", 1, ifelse(train2$ppark == "Monthly", 12,ifelse(train2$ppark == "Weekly", 52, ifelse(train2$ppark == "Daily", 365, train2$ppark)))))
+
+summary(train2$ppark)
+
+#ignore region, segment of car
+
 ```
 
 ```{r format test with numbers for factors}
@@ -141,13 +156,22 @@ test2$Choice = FALSE
 
 Tasks <= 12 are in D and tasks > 12 are in V
 shape is wide because 4 choices are in the same row
-```{r seperate training data for testing}
+```{r seperate train data for testing}
 A <- mlogit.data(train, shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
 
 D <- mlogit.data(subset(train, Task <= 12), shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
 
 V <- mlogit.data(subset(train, Task > 12), shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
 ActualChoice <- subset(train, Task > 12)[,"Choice"]
+```
+
+```{r seperate train2 data for testing with converted factors}
+A2 <- mlogit.data(train2, shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
+
+D2 <- mlogit.data(subset(train2, Task <= 12), shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
+
+V2 <- mlogit.data(subset(train2, Task > 12), shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
+ActualChoice2 <- subset(train2, Task > 12)[,"Choice"]
 ```
 
 ##Simple models
@@ -275,6 +299,83 @@ for (i in 1:nrow(Pred1A)){
 write.csv(Submission6, file = 'Submission6.csv')
 
 ```
+
+```{r model 7 with all factors}
+model7_pre <- mlogit(Choice~CC+GN+NS+BU+FA+LD+BZ+FC+FP+RP+PP+KA+SC+TS+NV+MA+LB+AF+HU+Price -1| gender+miles+night+age+Urb, data = D2)
+summary(model7_pre)
+
+
+model7 <- mlogit(Choice~CC+GN+NS+BU+FA+LD+BZ+FC+FP+RP+PP+KA+SC+TS+NV+MA+LB+AF+HU+Price -1| gender+miles+night+age+Urb+educ+income+ppark, data = D2)
+summary(model7)
+
+model7_3star <- mlogit(Choice~GN+NS+BU+FA+LD+BZ+FC+FP+RP+PP+KA+SC+TS+NV+MA+LB+AF+HU+Price-1 | age+Urb, data = D2)
+summary(model7_3star)
+
+model7_2star <- mlogit(Choice~GN+NS+BU+FA+LD+BZ+FC+FP+RP+PP+KA+SC+TS+NV+MA+LB+AF+HU+Price-1 | age+Urb+ppark, data = D2)
+summary(model7_2star)
+
+model7_1star <- mlogit(Choice~GN+NS+BU+FA+LD+BZ+FC+FP+RP+PP+KA+SC+TS+NV+MA+LB+AF+HU+Price-1 | miles+age+Urb+educ+ppark, data = D2)
+summary(model7_1star)
+
+Pred7_pre <- predict(model7_pre, newdata = V2)
+Pred7 <- predict(model7, newdata = V2)
+Pred7_3star <- predict(model7_3star, newdata = V2)
+Pred7_2star <- predict(model7_2star, newdata = V2)
+Pred7_1star <- predict(model7_1star, newdata = V2)
+```
+
+```{r validate model7}
+PredictChoice7_pre <- apply(Pred7_pre, 1, which.max)
+PredictChoice7 <- apply(Pred7, 1, which.max)
+PredictChoice7_3star <- apply(Pred7_3star, 1, which.max)
+PredictChoice7_2star <- apply(Pred7_2star, 1, which.max)
+PredictChoice7_1star <- apply(Pred7_1star, 1, which.max)
+
+
+t1_pre <- table(ActualChoice2, PredictChoice7_pre)
+t1 <- table(ActualChoice2, PredictChoice7)
+t3s <- table(ActualChoice2, PredictChoice7_3star)
+t2s <- table(ActualChoice2, PredictChoice7_2star)
+t1s <- table(ActualChoice2, PredictChoice7_1star)
+
+
+choiceVector <- vector(mode = "list", length = 5)
+choiceVector[[1]] <- t1_pre
+choiceVector[[2]] <- t1
+choiceVector[[3]] <- t3s
+choiceVector[[4]] <- t2s
+choiceVector[[5]] <- t1s
+
+```
+
+```{r compare accuracy}
+accurate_cnt <- c()
+for(i in 1:5){
+  accurate_cnt <- c(accurate_cnt, 0)
+  for(j in 1:4){
+    accurate_cnt[i] <- accurate_cnt[i] + choiceVector[[i]][j,j]
+  }
+}
+accurate_cnt/4550
+```
+all variables without educ, income, ppark: 51.4%
+all variables: 50.989%
+3 star variables: 50.791%
+2 star variables: 50.989%
+1 star variables: 50.83%
+
+```{r pred 7 submission}
+#write file
+Submission6 <- submission
+for (i in 1:nrow(Pred1A)){
+  for (j in colnames(Pred1A)){
+    Submission6[i,j] = Pred1A[i,j]
+  }
+}
+write.csv(Submission6, file = 'Submission6.csv')
+
+```
+
 
 
 ##CART
