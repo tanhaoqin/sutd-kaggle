@@ -157,6 +157,7 @@ table(train$miles)
 train$miles <- ifelse(train$miles == 425, 500, train$miles)
 table(train$miles)
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 #change night percentage to average of range
 train$night<- factor(train$night, levels = c("Under 10%","10% To 20%","21% To 30%", "31% To 40%", "41% To 50%","51% To 60%","61% To 70%", "71% To 80%","81% To 90%","91% To 100%" ))
@@ -198,7 +199,6 @@ str(train)
 #summary(train$educ)
 #head(train$educ)
 ```
-=======
 ```
 
 ```{r cart}
@@ -230,4 +230,3 @@ for (i in 1:nrow(Pred1A)){
 }
 write.csv(Submission4, file = 'Submission4.csv')
 ```
->>>>>>> origin/master
