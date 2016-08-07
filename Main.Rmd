@@ -13,7 +13,7 @@ library('mlogit')
 ## Read data, always do this
 
 
-```{r read cars}
+```{r read csv}
 train <- read.csv('train.csv')
 test <- read.csv('test.csv')
 test2 <- read.csv('test.csv')
@@ -393,7 +393,220 @@ prp(cart1)
 prp(cart2)
 ```
 
-```{r}
+##Clustering Models
+
+###Using factors
+
+```{r pre-processing data}
+
+#ClusterTrainData <- train[train$Task == 1,c(84,86:94)]
+ClusterTrainData <- train[train$Task == 1,c(84,86:89,91:92)]
+fac <- factor(c())
+levels <- c()
+for(i in colnames(ClusterTrainData)){
+  #print(levels(ClusterTrainData[,i]))
+  fac <- union(fac, levels(ClusterTrainData[,i]))
+}
+start = 1
+for(i in colnames(ClusterTrainData)){
+  end = start + length(levels(ClusterTrainData[,i])) - 1
+  for(j in fac[start:end]){
+    #print(c(i,j))
+    ClusterTrainData[j] <- ClusterTrainData[,i] == j
+  }
+  start = end + 1
+  ClusterTrainData[,i] <- NULL
+}
+
+#ClusterTestData <- test[test$Task == 1,c(84,86:94)]
+ClusterTestData <- test[test$Task == 1,c(84,86:89,91:92)]
+fac <- factor(c())
+levels <- c()
+for(i in colnames(ClusterTestData)){
+  #print(levels(ClusterTrainData[,i]))
+  fac <- union(fac, levels(ClusterTestData[,i]))
+}
+start = 1
+for(i in colnames(ClusterTestData)){
+  end = start + length(levels(ClusterTestData[,i])) - 1
+  for(j in fac[start:end]){
+    #print(c(i,j))
+    ClusterTestData[j] <- ClusterTestData[,i] == j
+  }
+  start = end + 1
+  ClusterTestData[,i] <- NULL
+}
 
 ```
+
+```{r clustering and modelling using kmeans & numerical variables}
+for(i in 1:10){
+  cluster <- kmeans(ClusterTrainData, centers = i)
+  clusterTrain <- train
+  clusterTest <- test
+  clusterTrain$cluster <- cluster$cluster[clusterTrain$Case]
+  clusterTest$cluster <- cluster$cluster[clusterTest$Case]
+  models <- vector(mode = "list", length = i)
+  total_correct = 0
+  print(i)
+  for(j in 1:i){
+#    print(c('cluster',j))
+    filteredTrain <- clusterTrain[clusterTrain$cluster == j,]
+    #print(c('cluster',j,'length',nrow(filteredTrain)))
+    
+    AC <- mlogit.data(filteredTrain, shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
+    
+    DC <- mlogit.data(subset(filteredTrain, Task <= 12), shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
+    
+    VC <- mlogit.data(subset(filteredTrain, Task > 12), shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
+    
+    ActualChoiceC <- subset(filteredTrain, Task > 12)[,"Choice"]
+    
+    modelC <- mlogit(Choice~CC+GN+NS+BU+FA+LD+BZ+FC+FP+RP+PP+KA+SC+TS+NV+MA+LB+AF+HU+Price-1, data = DC)
+    
+    predictC <- predict(modelC, newdata = VC)
+    PredictChoiceC <- apply(predictC, 1, which.max)
+    t <- table(PredictChoiceC, ActualChoiceC)
+    #print(t)
+    correct <- 0
+    for (choice in 1:4){
+      correct = correct + t[choice,choice]
+    }
+    total_correct = total_correct + correct
+    #print(total_correct)
+  }
+  print(total_correct)
+}
+
+```
+
+It is established that using five clusters yield the best results during validation.
+
+```{r predicting test case}
+closest.cluster <- function(x) {
+  cluster.dist <- apply(km$centers, 1, function(y) sqrt(sum((x-y)^2)))
+  return(which.min(cluster.dist)[1])
+}
+
+km <- kmeans(ClusterTrainData, centers = 4)
+clusterTrain$cluster <- km$cluster[clusterTrain$Case]
+clusterTest$cluster <- apply(ClusterTestData, 1, closest.cluster)
+
+all_predictions <- data.frame()
+
+for(j in 1:5){
+#    print(c('cluster',j))
+  filteredTrain <- clusterTrain[clusterTrain$cluster == j,]
+  filteredTest <- clusterTest[clusterTest$cluster == j & !is.na(clusterTest$cluster == j),]
+  #print(c('cluster',j,'length',nrow(filteredTrain)))
+  
+  AC <- mlogit.data(filteredTrain, shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
+  
+  TestC <- mlogit.data(filteredTest, shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
+  TestC$Ch1 = 0
+  TestC$Ch2 = 0
+  TestC$Ch3 = 0
+  TestC$Ch4 = 0
+  TestC$Choice = FALSE
+
+  modelC <- mlogit(Choice~CC+GN+NS+BU+FA+LD+BZ+FC+FP+RP+PP+KA+SC+TS+NV+MA+LB+AF+HU+Price-1, data = AC)
+  index <- filteredTest$No
+  predictC <- data.frame(predict(modelC, newdata = TestC))
+  predictC$index <- index
+  all_predictions <- rbind(all_predictions, predictC)
+}
+
+#Using base model for nulls
+
+filteredTest <- clusterTest[is.na(clusterTest$cluster == j),]
+TestC <- mlogit.data(filteredTest, shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
+TestC$Ch1 = 0
+TestC$Ch2 = 0
+TestC$Ch3 = 0
+TestC$Ch4 = 0
+TestC$Choice = FALSE
+index <- filteredTest$No
+predictC <- data.frame(predict(model1A, newdata = TestC))
+predictC$index <- index
+all_predictions <- rbind(all_predictions, predictC)
+
+Submission8 <- submission
+for (i in 1:nrow(Submission8)){
+  index <- Submission8[i,]$No
+  for (j in colnames(TestPredict)){
+    Submission8[i,j] = all_predictions[all_predictions$index == index,][,j]
+  }
+}
+write.csv(Submission8, file = 'Submission8.csv')
+
+```
+
+###Using numbers
+
+```{r pre-processing data}
+ClusterTrainData <- train2[train2$Task == 1,c(84,86:94)]
+fac <- factor(c())
+for(i in c('segment', 'region')){
+  #print(levels(ClusterTrainData[,i]))
+  fac <- union(levels(ClusterTrainData[,i]), fac)
+}
+for(i in fac[1:5]){
+  ClusterTrainData[i] <- ClusterTrainData$region == i
+}
+for(i in fac[5:11]){
+  ClusterTrainData[i] <- ClusterTrainData$segment == i
+}
+ClusterTrainData$region <- NULL
+ClusterTrainData$segment <- NULL
+#fac <- factor(c())
+#for(i in colnames(ClusterTrainData)){
+#  #print(levels(ClusterTrainData[,i]))
+#  fac <- union(levels(ClusterTrainData[,i]), fac)
+#}
+clusterVector <- vector(mode = "list", length = 9)
+```
+
+```{r clustering and modelling using kmeans & numerical variables}
+for(i in 1:10){
+  cluster <- kmeans(ClusterTrainData, centers = i)
+  clusterTrain <- train2
+  clusterTest <- test2
+  clusterTrain$cluster <- cluster$cluster[clusterTrain$Case]
+  clusterTest$cluster <- cluster$cluster[clusterTest$Case]
+  models <- vector(mode = "list", length = i)
+  total_correct = 0
+  print(i)
+  for(j in 1:i){
+#    print(c('cluster',j))
+    filteredTrain <- clusterTrain[clusterTrain$cluster == j,]
+    #print(c('cluster',j,'length',nrow(filteredTrain)))
+    
+    AC <- mlogit.data(filteredTrain, shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
+    
+    DC <- mlogit.data(subset(filteredTrain, Task <= 12), shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
+    
+    VC <- mlogit.data(subset(filteredTrain, Task > 12), shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
+    
+    ActualChoiceC <- subset(filteredTrain, Task > 12)[,"Choice"]
+    
+    modelC <- mlogit(Choice~CC+GN+NS+BU+FA+LD+BZ+FC+FP+RP+PP+KA+SC+TS+NV+MA+LB+AF+HU+Price-1, data = DC)
+    
+    predictC <- predict(modelC, newdata = VC)
+    PredictChoiceC <- apply(predictC, 1, which.max)
+    t <- table(PredictChoiceC, ActualChoiceC)
+    #print(t)
+    correct <- 0
+    for (choice in 1:4){
+      correct = correct + t[choice,choice]
+    }
+    total_correct = total_correct + correct
+    #print(total_correct)
+  }
+  print(total_correct)
+}
+
+```
+
+We establish that k = 2 is best but loses to baseline model
+
 
