@@ -77,11 +77,14 @@ str(train2)
 
 #change education, Grade School = 0, High School = 1, Trade/Vocational School = 2, Some College (1-3 Years) = 3, College Graduate (4 Years) = 4, Postgraduate College = 5
 
+
+
 train2$educ <- as.character(train2$educ)
 
-ifelse(train2$educ=="Grade School", 0, ifelse(train2$educ=="High School", 1, ifelse(train2$educ=="Trade/Vocational School", 2, ifelse(train2$educ=="Some College (1-3 Years)", 3, ifelse(train2$educ=="College Graduate (4 Years)", 4, ifelse(train2$educ=="Postgraduate College", 5, train2$educ))))))
+train2$educ <- factor(train2$educ, levels = c("Grade School","High School","Trade/Vocational School","Some College (1-3 Years)","College Graduate (4 Years)","Postgraduate College"))
+table(train2$educ)
+train2$educ <- as.numeric(train2$educ)
 
-train2$educ <- as.numeric(train$educ)
 str(train2$educ)
 
 str(train2)
@@ -146,12 +149,55 @@ test2$Urb <- ifelse(test2$Urb=="Rural/Country", 0, ifelse(test2$Urb=="Suburban",
 str(test2$Urb)
 str(test2)
 
+
+#change education, Grade School = 0, High School = 1, Trade/Vocational School = 2, Some College (1-3 Years) = 3, College Graduate (4 Years) = 4, Postgraduate College = 5
+
+test2$educ <- as.character(test2$educ)
+
+test2$educ <- factor(test2$educ, levels = c("Grade School","High School","Trade/Vocational School","Some College (1-3 Years)","College Graduate (4 Years)","Postgraduate College"))
+table(test2$educ)
+test2$educ <- as.numeric(test2$educ)
+
+str(test2)
+
+# change income to average of range
+summary(test2$income)
+
+
+test2$income <- factor(test2$income, levels = c("Under $29,999", "$30,000 to $39,999", "$40,000 to $49,999", "$50,000 to $59,999", "$60,000 to $69,999", "$70,000 to $79,999", "$80,000 to $89,999", "$90,000 to $99,999","$100,000 to $109,999", "$110,000 to $119,999", "$120,000 to $129,999", "$130,000 to $139,999", "$140,000 to $149,999", "$150,000 to $159,999", "$160,000 to $169,999", "$170,000 to $179,999", "$180,000 to $189,999", "$190,000 to $199,999", "$200,000 to $209,999", "$210,000 to $219,999", "$220,000 to $229,999","$230,000 to $239,999", "$240,000 to $249,999", "$250,000 to $259,999", "$260,000 to $269,999", "$270,000 to $279,999", "$280,000 to 2$89,999", "$290,000 to $299,999", "$300,000 & Over"))
+
+table(test2$income)
+test2$income <- (as.numeric(test$income)-1)*10000+25000
+test2$income <- ifelse(test2$income==25000, 20000, ifelse(test2$income==245000, 250000, test2$income))
+test2$income[is.na(test2$income)] <- mean(test2$income,na.rm=T)
+
+str(test2)
+
+#change parking frequency to number of times per year
+summary(test2$ppark)
+head(test2$ppark)
+
+test2$ppark <- as.character(test2$ppark)
+test2$ppark <- factor(test2$ppark, levels = c("Never", "Yearly", "Monthly", "Weekly",  "Daily"))
+test2$ppark <- ifelse(test2$ppark == "Never", 0, ifelse(test2$ppark =="Yearly", 1, ifelse(test2$ppark == "Monthly", 12,ifelse(test2$ppark == "Weekly", 52, ifelse(test2$ppark == "Daily", 365, test2$ppark)))))
+
+summary(test2$ppark)
+
+#ignore region, segment of car
+
+
 test2 <- mlogit.data(test2, shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
 test2$Ch1 = 0
 test2$Ch2 = 0
 test2$Ch3 = 0
 test2$Ch4 = 0
 test2$Choice = FALSE
+
+#install.packages("Amelia")
+library(Amelia)
+missmap(test2, main = "Missing values vs observed")
+
+# all values are here
 ```
 
 Tasks <= 12 are in D and tasks > 12 are in V
@@ -324,6 +370,52 @@ Pred7_2star <- predict(model7_2star, newdata = V2)
 Pred7_1star <- predict(model7_1star, newdata = V2)
 ```
 
+```{r model 8 using glmnet}
+
+library(glmnet)
+newA2 <- A2[,4:41]
+colnames(newA2)
+x <- model.matrix(Choice~., newA2)
+y <- newA2$Choice
+
+grid <- 10^seq(10,-6,length=100)
+
+set.seed(1)
+glmnet_train<- sample(1:nrow(x), nrow(x)/2)
+glmnet_test<- -glmnet_train
+
+glm_model8<- glmnet(x[glmnet_train,], y[glmnet_train], alpha=1, lambda = grid)
+plot(glm_model8, xvar="lambda")
+
+##BEST LAMBDA IS $lambda.min
+set.seed(2)
+cvlasso<- cv.glmnet(x[glmnet_train,], y[glmnet_train], alpha=1)
+cvlasso
+#using D2 data, best lambda is 0.001681765
+#gender+miles+night+age+Urb
+#repeat above using D Data instead
+#using D data, best lambda is 0.003885096
+#using A data, best lambda is 0.002757943
+#using A2 data, 0.001732069
+#using newA2 data, 0.001732069
+#using 2/3 of data for training
+
+predictlasso<- predict(glm_model8, newx = x[glmnet_test,], s=cvlasso$lambda.min) #lambdaD2=0.001681765, lambdaD=0.003885096 lambdaA = 0.002757943 #lambdaA2 = 0.001732069 #lamdawith2/3 training set = 0.00131865
+mean((predictlasso-y[glmnet_test])^2)
+#mean squared error D2 is 0.1769509
+#mean squared error D is 0.1770686
+#mean squared error A is 0.1737358
+#mean squared error A2 is 0.1736695
+#mse 2/3 training set is 0.1720781
+
+
+lassocoef <- predict(glm_model8, s = cvlasso$lambda.min, type ="coefficients")
+?predict.glm
+lassocoef
+```
+setwd("C:/Users/Susiwati/Dropbox/Susi/SUTD/40.220 The Analytics Edge/R/Susi/sutd-kaggle")
+
+
 ```{r validate model7}
 PredictChoice7_pre <- apply(Pred7_pre, 1, which.max)
 PredictChoice7 <- apply(Pred7, 1, which.max)
@@ -348,6 +440,61 @@ choiceVector[[5]] <- t1s
 
 ```
 
+```{r validate model 8}
+set.seed(1)
+
+model8 <- mlogit(Choice~CC+GN+NS+BU+FA+LD+BZ+FC+FP+RP+PP+KA+SC+TS+NV+MA+LB+AF+HU+Price -1 |year+miles+region+segment, data = D2)
+
+#model8 <- mlogit(Choice~CC+GN+NS+BU+FA+LD+BZ+FC+FP+RP+PP+KA+SC+TS+NV+MA+LB+AF+HU+Price -1 |educ+night+ppark+region+segment, data = D2)
+#took out educ, income
+summary(model8)
+
+Pred8 <- predict(model8, newdata = V2)
+
+PredictChoice8 <- apply(Pred8, 1, which.max)
+t8 <- table(ActualChoice2, PredictChoice8)
+
+
+accurate_cnt <- c()
+for(i in 1:1){
+  accurate_cnt <- c(accurate_cnt, 0)
+  for(j in 1:4){
+    accurate_cnt[i] <- accurate_cnt[i] + t8[j,j]
+  }
+}
+accurate_cnt/4550
+#without income
+#using educincome, wo year 0.5116484
+#without educ, year 0.5125275
+#without income, year 0.5136264
+#without educ, income 0.5162637
+#without above and region, 0.5074725
+#without all factors, 0.4859341
+#with educ+night+ppark+region+segment 0.5134066
+
+```
+
+```{r Pred 8 submission}
+
+model8A <- mlogit(Choice~CC+GN+NS+BU+FA+LD+BZ+FC+FP+RP+PP+KA+SC+TS+NV+MA+LB+AF+HU+Price -1 |year+miles+region+segment, data = A2)
+
+summary(model8A)
+
+Pred8A <- predict(model8A, newdata = test2)
+
+
+#write file
+Submission8A <- submission
+for (i in 1:nrow(Pred8A)){
+  for (j in colnames(Pred8A)){
+    Submission8A[i,j] = Pred8A[i,j]
+  }
+}
+write.csv(Submission8A, file = 'Submission7.csv')
+
+```
+
+
 ```{r compare accuracy}
 accurate_cnt <- c()
 for(i in 1:5){
@@ -358,6 +505,7 @@ for(i in 1:5){
 }
 accurate_cnt/4550
 ```
+best prediction
 all variables without educ, income, ppark: 51.4%
 all variables: 50.989%
 3 star variables: 50.791%
