@@ -11,7 +11,28 @@ library('mlogit')
 ```
 
 ## Read data, always do this
+```{r utility functions}
+prediction_score <-function (actual, p){
+  logloss <- 0
+  N <- length(actual)
+  for(i in 1:N){
+    for(j in 1:4){
+      y <- ifelse(as.integer(actual[i]) == j, 1, 0)
+      p_score <- p[i,j]
+      l <- log(as.numeric(p_score))
+      logloss <- logloss + -1/N*y*l
+    }
+  }
+  logloss
+}
 
+normalize_data <- function(D){
+  D[,21:40] <- scale(D[,21:40])
+  D[,5:7] <- scale(D[,5:7])
+  D[,9:10] <- scale(D[,9:10])
+  D
+}
+```
 
 ```{r read csv}
 train <- read.csv('train.csv')
@@ -384,12 +405,12 @@ set.seed(1)
 glmnet_train<- sample(1:nrow(x), nrow(x)/2)
 glmnet_test<- -glmnet_train
 
-glm_model8<- glmnet(x[glmnet_train,], y[glmnet_train], alpha=1, lambda = grid)
+glm_model8<- glmnet(x[glmnet_train,], y[glmnet_train], family = 'multinomial', alpha=1, lambda = grid)
 plot(glm_model8, xvar="lambda")
 
 ##BEST LAMBDA IS $lambda.min
 set.seed(2)
-cvlasso<- cv.glmnet(x[glmnet_train,], y[glmnet_train], alpha=1)
+cvlasso<- cv.glmnet(x[glmnet_train,], y[glmnet_train], alpha=1, family = 'multinomial')
 cvlasso
 #using D2 data, best lambda is 0.001681765
 #gender+miles+night+age+Urb
@@ -438,12 +459,20 @@ choiceVector[[3]] <- t3s
 choiceVector[[4]] <- t2s
 choiceVector[[5]] <- t1s
 
+prediction_score(ActualChoice2,Pred7_pre)
+prediction_score(ActualChoice2,Pred7)
+prediction_score(ActualChoice2,Pred7_3star)
+prediction_score(ActualChoice2,Pred7_2star)
+prediction_score(ActualChoice2,Pred7_1star)
+
 ```
 
 ```{r validate model 8}
 set.seed(1)
 
-model8 <- mlogit(Choice~CC+GN+NS+BU+FA+LD+BZ+FC+FP+RP+PP+KA+SC+TS+NV+MA+LB+AF+HU+Price -1 |year+miles+region+segment, data = D2)
+model8 <- mlogit(Choice~GN+NS+BU+FA+LD+BZ+FC+FP+RP+PP+KA+SC+TS+NV+MA+LB+AF+HU+Price - 1|year+miles+region+segment, data = D2)
+
+#model8 <- mlogit(Choice~GN+NS+BU+FA+LD+BZ+FC+FP+RP+PP+KA+SC+TS+NV+MA+LB+HU+Price - 1|miles+region+segment+income, data = D2)
 
 #model8 <- mlogit(Choice~CC+GN+NS+BU+FA+LD+BZ+FC+FP+RP+PP+KA+SC+TS+NV+MA+LB+AF+HU+Price -1 |educ+night+ppark+region+segment, data = D2)
 #took out educ, income
@@ -452,6 +481,9 @@ summary(model8)
 Pred8 <- predict(model8, newdata = V2)
 
 PredictChoice8 <- apply(Pred8, 1, which.max)
+
+prediction_score(ActualChoice2, Pred8)
+
 t8 <- table(ActualChoice2, PredictChoice8)
 
 
@@ -494,6 +526,46 @@ write.csv(Submission8A, file = 'Submission7.csv')
 
 ```
 
+```{r Pred 9}
+model9 <- mlogit(Choice~GN+NS+BU+FA+LD+BZ+FC+FP+RP+PP+KA+SC+TS+NV+MA+LB+HU+Price|miles+region+segment+income, data = A2)
+
+summary(model9)
+
+predict9 <- predict(model9, newdata = test2)
+
+
+#write file
+Submission9 <- submission
+for (i in 1:nrow(predict9)){
+  for (j in colnames(predict9)){
+    Submission9[i,j] = predict9[i,j]
+  }
+}
+write.csv(Submission9, file = 'Submission9.csv')
+
+```
+
+```{r Pred 10}
+model10 <- mlogit(Choice~CC+GN+NS+BU+FA+LD+BZ+FC+FP+RP+PP+KA+SC+TS+NV+MA+LB+AF+HU+Price -1| gender+miles+night+age+Urb, data = D2, probit=TRUE)
+
+summary(model10)
+
+predict10 <- predict(model10, newdata = test2)
+
+PredictChoice10 <- apply(predict10, 1, which.max)
+t10 <- table(ActualChoice2, PredictChoice10)
+
+
+accurate_cnt <- c()
+for(i in 1:1){
+  accurate_cnt <- c(accurate_cnt, 0)
+  for(j in 1:4){
+    accurate_cnt[i] <- accurate_cnt[i] + t10[j,j]
+  }
+}
+accurate_cnt/4550
+```
+
 
 ```{r compare accuracy}
 accurate_cnt <- c()
@@ -524,6 +596,69 @@ write.csv(Submission6, file = 'Submission6.csv')
 
 ```
 
+```{r model 9}
+model9 <- mlogit(Choice~CC+GN+NS+BU+FA+LD+BZ+FC+FP+RP+PP+KA+SC+TS+NV+MA+LB+AF+HU+Price | gender+miles+night+age+Urb , data = D2, rpar = c(CC = 'n',  GN = 'n',  NS = 'n',  BU = 'n',  FA = 'n',  LD = 'n',  BZ = 'n',  FC = 'n',  FP = 'n',  RP = 'n',  PP = 'n',  KA = 'n',  SC = 'n',  TS = 'n',  NV = 'n',  MA = 'n',  LB = 'n',  AF = 'n',  HU = 'n', Price = 'n'), panel = TRUE, print.level = TRUE)
+summary(model9)
+
+```
+
+```{r validate 9}
+pred9 <- predict(model9, newdata = V2)
+choice9 <- apply(pred9, 1, which.max)
+t9 <- table(ActualChoice2, choice9)
+
+
+accurate_cnt <- c()
+for(i in 1:1){
+  accurate_cnt <- c(accurate_cnt, 0)
+  for(j in 1:4){
+    accurate_cnt[i] <- accurate_cnt[i] + t9[j,j]
+  }
+}
+accurate_cnt/4550
+#50.7% accuracy
+```
+
+```{r multinomial probit}
+library('MNP')
+res <- mnp()
+
+predict_nn <- predict(mod, test_nn,"probs")
+choice_nn <- apply(predict_nn, 1, which.max)
+t_chi <- table(ActualChoice2, choice_nn)
+
+
+accurate_cnt <- c()
+for(i in 1:1){
+  accurate_cnt <- c(accurate_cnt, 0)
+  for(j in 1:4){
+    accurate_cnt[i] <- accurate_cnt[i] + t9[j,j]
+  }
+}
+accurate_cnt/4550
+```
+
+```{r neural network}
+
+train_nn <- subset(train, Task <= 12)
+test_nn <- subset(train, Task > 12)
+
+mod <- multinom(Choice~CC+GN+NS+BU+FA+LD+BZ+FC+FP+RP+PP+KA+SC+TS+NV+MA+LB+AF+HU+Price -1| gender+miles+night+age+Urb, data=D2)
+
+predict_nn <- predict(mod, V2,"probs")
+choice_nn <- apply(predict_nn, 1, which.max)
+t_nn <- table(ActualChoice2, choice_nn)
+
+
+accurate_cnt <- c()
+for(i in 1:1){
+  accurate_cnt <- c(accurate_cnt, 0)
+  for(j in 1:4){
+    accurate_cnt[i] <- accurate_cnt[i] + t_nn[j,j]
+  }
+}
+accurate_cnt/4550
+```
 
 
 ##CART
