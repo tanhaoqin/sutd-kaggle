@@ -45,6 +45,7 @@ summary(train)
 summary(test)
 ```
 
+
 ```{r format test data}
 test$income <- lapply(test$income, as.character)
 test$income <- factor(test$income,levels=levels(train$income))
@@ -239,6 +240,66 @@ D2 <- mlogit.data(subset(train2, Task <= 12), shape = 'wide', choice = "Choice",
 
 V2 <- mlogit.data(subset(train2, Task > 12), shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
 ActualChoice2 <- subset(train2, Task > 12)[,"Choice"]
+```
+
+```{r generating data for proper cross validation}
+
+start <- c(1, 4, 7, 10, 13, 16)
+stop <- c(4, 7, 10, 13, 16, 19)
+
+actualVector <- vector(mode = "list", length = 6)
+trainVector <- vector(mode = "list", length = 6)
+validateVector <- vector(mode = "list", length = 6)
+
+for (i in 1:6){
+  trainVector[[i]] <-mlogit.data(subset(train2, Task >= start[i]&Task < stop[i]), shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")   
+  validateVector[[i]] <-mlogit.data(subset(train2, !(Task >= start[i]&Task < stop[i])), shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
+    actualVector[[i]] <-subset(train2, !(Task >= start[i]&Task < stop[i]))[,'Choice']
+  #normalize_data(trainVector[[i]])
+  #normalize_data(validateVector[[i]])
+}
+
+```
+
+```{r cv}
+
+cvmodel1Vector <- vector(mode = "list", length = 6)
+cvmodel2Vector <- vector(mode = "list", length = 6)
+cvmodel3Vector <- vector(mode = "list", length = 6)
+cvmodel4Vector <- vector(mode = "list", length = 6)
+score1 <- c()
+score2 <- c()
+score3 <- c()
+score4 <- c()
+
+for (i in 1:6){
+  cvmodel1Vector[[i]] <- mlogit(Choice~CC+GN+NS+BU+FA+LD+BZ+FC+FP+RP+PP+KA+SC+TS+NV+MA+LB+AF+HU+Price -1| gender+miles+night+age+Urb, data = trainVector[[i]])
+
+  cvmodel2Vector[[i]] <- mlogit(Choice~GN+NS+BU+FA+LD+BZ+FC+FP+RP+PP+KA+SC+TS+NV+MA+LB+AF+HU+Price -1| gender+miles+night+age+Urb, data = trainVector[[i]])
+  
+  cvmodel3Vector[[i]] <- mlogit(Choice~CC+GN+NS+FA+LD+BZ+FC+FP+RP+PP+KA+SC+TS+NV+MA+LB+AF+HU+Price -1| gender+miles+night+age+Urb, data = trainVector[[i]])
+  
+  cvmodel4Vector[[i]] <- mlogit(Choice~CC+GN+NS+BU+FA+LD+BZ+FC+FP+RP+PP+SC+TS+NV+MA+LB+AF+HU+Price -1| gender+miles+night+age+Urb, data = trainVector[[i]])
+  
+  predictmodel1 <- predict(cvmodel1Vector[[i]], newdata = validateVector[[i]])
+  predictmodel2 <- predict(cvmodel2Vector[[i]], newdata = validateVector[[i]])
+  predictmodel3 <- predict(cvmodel3Vector[[i]], newdata = validateVector[[i]])
+  predictmodel4 <- predict(cvmodel4Vector[[i]], newdata = validateVector[[i]])
+  
+  score1 <- c(score1, prediction_score(actualVector[[i]], predictmodel1))
+  score2 <- c(score2, prediction_score(actualVector[[i]], predictmodel2))
+  score3 <- c(score3, prediction_score(actualVector[[i]], predictmodel3))
+  score4 <- c(score4, prediction_score(actualVector[[i]], predictmodel4))
+  
+}
+
+#model1
+mean(score1)
+#model2
+mean(score2)
+#model3
+mean(score3)
+mean(score4)
 ```
 
 ##Simple models
@@ -470,7 +531,7 @@ prediction_score(ActualChoice2,Pred7_1star)
 ```{r validate model 8}
 set.seed(1)
 
-model8 <- mlogit(Choice~GN+NS+BU+FA+LD+BZ+FC+FP+RP+PP+KA+SC+TS+NV+MA+LB+AF+HU+Price - 1|year+miles+region+segment, data = D2)
+model8 <- mlogit(Choice~GN+NS+BU+FA+LD+BZ+FC+FP+RP+PP+KA+SC+TS+NV+MA+LB+AF+HU+Price - 1|year+region+segment, data = D2)
 
 #model8 <- mlogit(Choice~GN+NS+BU+FA+LD+BZ+FC+FP+RP+PP+KA+SC+TS+NV+MA+LB+HU+Price - 1|miles+region+segment+income, data = D2)
 
@@ -674,6 +735,10 @@ cart2 = rpart(Choice~CC+GN+NS+BU+FA+LD+BZ+FC+FP+RP+PP+KA+SC+TS+NV+MA+LB+AF+HU+Pr
 
 prp(cart1)
 prp(cart2)
+```
+
+```{r cross-validation with six models}
+
 ```
 
 ##Clustering Models
