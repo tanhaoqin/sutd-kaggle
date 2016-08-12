@@ -682,6 +682,7 @@ Pred11_female <- predict(model7_pre, newdata = V2)
 length(Pred11_female)
 Pred11_male[1,2]
 
+# Orginal 
 Pred11_tgt <- Pred11_male
 
 for(i in 1:nrow(Pred11_male)){
@@ -690,15 +691,35 @@ for(i in 1:nrow(Pred11_male)){
   }
 }
 
+# Split data set while keeping id (Number)
+v2male_raw = subset(train2,Task > 12 & gender==1)
+v2female_raw = subset(train2,Task > 12 & gender==0)
+Pred11_male <- data.frame(predict(model7_pre_male, newdata = V2male))
+Pred11_female <- data.frame(predict(model7_pre, newdata = V2female))
+Pred11_split <- data.frame(No = subset(train2,Task>12)[,"No"])
+for(i in 1:nrow(v2male_raw)){
+  Pred11_male$No[i] <- v2male_raw[i,"No"]
+}
+for(i in 1:nrow(v2female_raw)){
+  Pred11_female$No[i] <- v2female_raw[i,"No"]
+}
+s <- rbind(Pred11_male,Pred11_female)
+Pred11_split = merge(x = Pred11_split, y = s, by = "No")
+Pred11_split <- Pred11_split[,-(1)]
+
+
 PredictChoice11avg <- apply(Pred11_tgt, 1, which.max)
 
 PredictChoice11male <- apply(Pred11_male, 1, which.max)
 PredictChoice11female <- apply(Pred11_female, 1, which.max)
 
-prediction_score(ActualChoice2, Pred7_pre)
+# prediction_score(ActualChoice2, Pred7_pre)
+# prediction_score(ActualChoice2, Pred11_tgt)
+# prediction_score(ActualChoice2, Pred11_male)
+# prediction_score(ActualChoice2female, Pred11_female)
+
 prediction_score(ActualChoice2, Pred11_tgt)
-prediction_score(ActualChoice2, Pred11_male)
-prediction_score(ActualChoice2female, Pred11_female)
+prediction_score(ActualChoice2, Pred11_split)
 ```
 
 
@@ -725,15 +746,34 @@ for(i in 1:nrow(Pred11_old)){
   }
 }
 
+# Split data set while keeping id (Number)
+v2young_raw = subset(train2,Task > 12 & age<36)
+v2old_raw = subset(train2,Task > 12 & age>35)
+Pred11_old <- data.frame(predict(model7_pre_male, newdata = V2young))
+Pred11_young <- data.frame(predict(model7_pre, newdata = V2old))
+Pred11_split <- data.frame(No = subset(train2,Task>12)[,"No"])
+for(i in 1:nrow(v2young_raw)){
+  Pred11_young$No[i] <- v2young_raw[i,"No"]
+}
+for(i in 1:nrow(v2old_raw)){
+  Pred11_old$No[i] <- v2old_raw[i,"No"]
+}
+s <- rbind(Pred11_old,Pred11_young)
+Pred11_split = merge(x = Pred11_split, y = s, by = "No")
+Pred11_split <- Pred11_split[,-(1)]
+
 PredictChoice11avg <- apply(Pred11_allages, 1, which.max)
 
 PredictChoice11old <- apply(Pred11_old, 1, which.max)
 PredictChoice11young <- apply(Pred11_young, 1, which.max)
 
-prediction_score(ActualChoice, Pred7_pre)
+#prediction_score(ActualChoice, Pred7_pre)
+#prediction_score(ActualChoice, Pred11_allages)
+#prediction_score(ActualChoice, Pred11_old)
+#prediction_score(ActualChoice, Pred11_young)
+
 prediction_score(ActualChoice, Pred11_allages)
-prediction_score(ActualChoice, Pred11_old)
-prediction_score(ActualChoice, Pred11_young)
+prediction_score(ActualChoice, Pred11_split)
 ```
 
 ```{r model13 with night split}
