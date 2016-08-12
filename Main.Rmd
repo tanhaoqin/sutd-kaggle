@@ -240,7 +240,129 @@ D2 <- mlogit.data(subset(train2, Task <= 12), shape = 'wide', choice = "Choice",
 
 V2 <- mlogit.data(subset(train2, Task > 12), shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
 ActualChoice2 <- subset(train2, Task > 12)[,"Choice"]
+
 ```
+
+```{r data visualisation}
+
+
+```
+
+
+
+```{r seperating by gender}
+A2male <- mlogit.data(subset(train2, train2$gender==1), shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
+
+A2female <- mlogit.data(subset(train2, train2$gender==0), shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
+
+D2male <- mlogit.data(subset(train2, Task <= 12 & gender==1), shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
+
+D2female <- mlogit.data(subset(train2, Task <= 12 & gender==0), shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
+
+V2male <- mlogit.data(subset(train2, Task > 12 & gender==1), shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
+ActualChoice2 <- subset(train2, Task > 12)[,"Choice"]
+
+V2female <- mlogit.data(subset(train2, Task > 12 & gender==0), shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
+ActualChoice2 <- subset(train2, Task > 12)[,"Choice"]
+ActualChoice2male <- subset(train2, Task > 12 & gender ==1)[,"Choice"]
+ActualChoice2female <- subset(train2, Task > 12 & gender ==0)[,"Choice"]
+```
+
+```{r seperating by age}
+
+A2old <- mlogit.data(subset(train2, train2$age>35), shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
+
+A2young <- mlogit.data(subset(train2, train2$age<36), shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
+
+D2old <- mlogit.data(subset(train2, Task <= 12 & age>35), shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
+
+D2young <- mlogit.data(subset(train2, Task <= 12 & age<36), shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
+
+V2old <- mlogit.data(subset(train2, Task > 12 & age>35), shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
+ActualChoice2 <- subset(train2, Task > 12)[,"Choice"]
+
+V2young <- mlogit.data(subset(train2, Task > 12 & age<36), shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
+
+ActualChoice2 <- subset(train2, Task > 12)[,"Choice"]
+ActualChoice2old <- subset(train2, Task > 12 & age>35)[,"Choice"]
+ActualChoice2young <- subset(train2, Task > 12 & age<36)[,"Choice"]
+
+
+```
+
+```{r separating by night}
+A2morenight <- mlogit.data(subset(train2, train2$night>26), shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
+
+A2lessnight <- mlogit.data(subset(train2, train2$night<27), shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
+
+D2morenight <- mlogit.data(subset(train2, Task <= 12 & night>26), shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
+
+D2lessnight <- mlogit.data(subset(train2, Task <= 12 & night<27), shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
+
+V2morenight <- mlogit.data(subset(train2, Task > 12 & night>26), shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
+ActualChoice2 <- subset(train2, Task > 12)[,"Choice"]
+
+V2lessnight <- mlogit.data(subset(train2, Task > 12 & night<27), shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
+
+ActualChoice2 <- subset(train2, Task > 12)[,"Choice"]
+ActualChoice2morenight <- subset(train2, Task > 12 & night>26)[,"Choice"]
+ActualChoice2lessnight <- subset(train2, Task > 12 & night<27)[,"Choice"]
+
+```
+
+
+```{r seperating by income}
+A2highincome <- mlogit.data(subset(train2, train2$income>200000), shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
+
+A2lowincome <- mlogit.data(subset(train2, train2$income<200001), shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
+
+D2highincome <- mlogit.data(subset(train2, Task <= 12 & income>200000), shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
+
+D2lowincome <- mlogit.data(subset(train2, Task <= 12 & income<200001), shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
+
+V2highincome <- mlogit.data(subset(train2, Task > 12 & income>200000), shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
+ActualChoice2 <- subset(train2, Task > 12)[,"Choice"]
+
+V2lowincome <- mlogit.data(subset(train2, Task > 12 & income<200001), shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
+
+ActualChoice2 <- subset(train2, Task > 12)[,"Choice"]
+ActualChoice2highincome <- subset(train2, Task > 12 & income>200000)[,"Choice"]
+ActualChoice2lowincome <- subset(train2, Task > 12 & income<200001)[,"Choice"]
+```
+
+
+names(A2)
+
+```{r seperating by segment}
+summary(A2$segment)
+A2fullsize_pickup <- mlogit.data(subset(train2, train2$segment=="Full-size Pickup"), shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
+A2midsize_car <- mlogit.data(subset(train2, train2$segment=="Midsize Car"), shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
+A2luxury_utility <- mlogit.data(subset(train2, train2$segment=="Midsize Luxury Utility segements"), shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
+A2midsize_utility <- mlogit.data(subset(train2, train2$segment=="Midsize Utility"), shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
+A2luxury_sedan <- mlogit.data(subset(train2, train2$segment=="Prestige Luxury Sedan"), shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
+A2small_car <- mlogit.data(subset(train2, train2$segment=="Small Car"), shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
+summary(A2$segment)
+
+D2fullsize_pickup <- mlogit.data(subset(train2, Task <= 12 & train2$segment=="Full-size Pickup"), shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
+D2midsize_car <- mlogit.data(subset(train2, Task <= 12 & train2$segment=="Midsize Car"), shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
+D2luxury_utility <- mlogit.data(subset(train2, Task <= 12 & train2$segment=="Midsize Luxury Utility segements"), shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
+D2midsize_utility <- mlogit.data(subset(train2, Task <= 12 & train2$segment=="Midsize Utility"), shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
+D2luxury_sedan <- mlogit.data(subset(train2, Task <= 12 & train2$segment=="Prestige Luxury Sedan"), shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
+D2small_car <- mlogit.data(subset(train2, Task <= 12 & train2$segment=="Small Car"), shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
+summary(D2$segment)
+
+ActualChoice2 <- subset(train2, Task > 12)[,"Choice"]
+
+V2fullsize_pickup <- mlogit.data(subset(train2, Task > 12 & train2$segment=="Full-size Pickup"), shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
+V2midsize_car <- mlogit.data(subset(train2, Task > 12 & train2$segment=="Midsize Car"), shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
+V2luxury_utility <- mlogit.data(subset(train2, Task > 12 & train2$segment=="Midsize Luxury Utility segements"), shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
+V2midsize_utility <- mlogit.data(subset(train2, Task > 12 & train2$segment=="Midsize Utility"), shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
+V2luxury_sedan <- mlogit.data(subset(train2, Task > 12 & train2$segment=="Prestige Luxury Sedan"), shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
+V2small_car <- mlogit.data(subset(train2, Task > 12 & train2$segment=="Small Car"), shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
+summary(V2$segment)
+
+```
+
 
 ```{r generating data for proper cross validation}
 
@@ -260,6 +382,7 @@ for (i in 1:6){
 }
 
 ```
+
 
 ```{r cv}
 
@@ -543,6 +666,235 @@ prediction_score(ActualChoice2,Pred7_2star)
 prediction_score(ActualChoice2,Pred7_1star)
 
 ```
+
+```{r model11 with gender split}
+model7_pre_male <- mlogit(Choice~CC+GN+NS+BU+FA+LD+BZ+FC+FP+RP+PP+KA+SC+TS+NV+MA+LB+AF+HU+Price -1| miles+night+age+Urb, data = D2male)
+
+model7_pre_female <- mlogit(Choice~CC+GN+NS+BU+FA+LD+BZ+FC+FP+RP+PP+KA+SC+TS+NV+MA+LB+AF+HU+Price -1| miles+night+age+Urb, data = D2female)
+
+summary(model7_pre_male)
+model7_pre_male$coefficients
+summary(model7_pre_female)
+model7_pre_female$coefficients
+
+Pred11_male <- predict(model7_pre_male, newdata = V2)
+Pred11_female <- predict(model7_pre, newdata = V2)
+length(Pred11_female)
+Pred11_male[1,2]
+
+Pred11_tgt <- Pred11_male
+
+for(i in 1:nrow(Pred11_male)){
+  for (j in 1:4){
+    Pred11_tgt[i,j] <- (Pred11_male[i,j]+Pred11_female[i,j])/2
+  }
+}
+
+PredictChoice11avg <- apply(Pred11_tgt, 1, which.max)
+
+PredictChoice11male <- apply(Pred11_male, 1, which.max)
+PredictChoice11female <- apply(Pred11_female, 1, which.max)
+
+prediction_score(ActualChoice2, Pred7_pre)
+prediction_score(ActualChoice2, Pred11_tgt)
+prediction_score(ActualChoice2, Pred11_male)
+prediction_score(ActualChoice2female, Pred11_female)
+```
+
+
+```{r model12 with age split}
+model7_pre_old <- mlogit(Choice~CC+GN+NS+BU+FA+LD+BZ+FC+FP+RP+PP+KA+SC+TS+NV+MA+LB+AF+HU+Price -1| gender+miles+night+age+Urb, data = D2old)
+
+model7_pre_young <- mlogit(Choice~CC+GN+NS+BU+FA+LD+BZ+FC+FP+RP+PP+KA+SC+TS+NV+MA+LB+AF+HU+Price -1| gender+miles+night+age+Urb, data = D2young)
+
+summary(model7_pre_old)
+model7_pre_old$coefficients
+summary(model7_pre_young)
+model7_pre_young$coefficients
+
+Pred11_old <- predict(model7_pre_old, newdata = V2)
+Pred11_young <- predict(model7_pre, newdata = V2)
+length(Pred11_young)
+Pred11_old[1,2]
+
+Pred11_allages <- Pred11_old
+
+for(i in 1:nrow(Pred11_old)){
+  for (j in 1:4){
+    Pred11_allages[i,j] <- (Pred11_old[i,j]+Pred11_young[i,j])/2
+  }
+}
+
+PredictChoice11avg <- apply(Pred11_allages, 1, which.max)
+
+PredictChoice11old <- apply(Pred11_old, 1, which.max)
+PredictChoice11young <- apply(Pred11_young, 1, which.max)
+
+prediction_score(ActualChoice, Pred7_pre)
+prediction_score(ActualChoice, Pred11_allages)
+prediction_score(ActualChoice, Pred11_old)
+prediction_score(ActualChoice, Pred11_young)
+```
+
+```{r model13 with night split}
+model7_pre_morenight <- mlogit(Choice~CC+GN+NS+BU+FA+LD+BZ+FC+FP+RP+PP+KA+SC+TS+NV+MA+LB+AF+HU+Price -1| gender+miles+night+age+Urb, data = D2morenight)
+
+
+model7_pre_lessnight <- mlogit(Choice~CC+GN+NS+BU+FA+LD+BZ+FC+FP+RP+PP+KA+SC+TS+NV+MA+LB+AF+HU+Price -1| gender+miles+age+Urb, data = D2lessnight)
+
+summary(model7_pre_morenight)
+model7_pre_morenight$coefficients
+summary(model7_pre_lessnight)
+model7_pre_lessnight$coefficients
+
+Pred11_morenight <- predict(model7_pre_morenight, newdata = V2)
+Pred11_lessnight <- predict(model7_pre, newdata = V2)
+
+length(Pred11_lessnight)
+Pred11_morenight[1,2]
+
+Pred11_allnight <- Pred11_morenight
+
+for(i in 1:nrow(Pred11_morenight)){
+  for (j in 1:4){
+    Pred11_allages[i,j] <- (Pred11_morenight[i,j]+Pred11_lessnight[i,j])/2
+  }
+}
+
+PredictChoice11avg <- apply(Pred11_allages, 1, which.max)
+
+PredictChoice11morenight <- apply(Pred11_morenight, 1, which.max)
+PredictChoice11lessnight <- apply(Pred11_lessnight, 1, which.max)
+
+prediction_score(ActualChoice, Pred7_pre)
+prediction_score(ActualChoice, Pred11_allnight)
+prediction_score(ActualChoice, Pred11_morenight)
+prediction_score(ActualChoice, Pred11_lessnight)
+```
+
+
+```{r model14 with income split}
+model7_pre_highincome <- mlogit(Choice~CC+GN+NS+BU+FA+LD+BZ+FC+FP+RP+PP+KA+SC+TS+NV+MA+LB+AF+HU+Price -1| gender+miles+night+age+Urb, data = D2highincome)
+
+
+model7_pre_lowincome <- mlogit(Choice~CC+GN+NS+BU+FA+LD+BZ+FC+FP+RP+PP+KA+SC+TS+NV+MA+LB+AF+HU+Price -1| gender+miles+night+age+Urb, data = D2lowincome)
+
+summary(model7_pre_highincome)
+model7_pre_highincome$coefficients
+summary(model7_pre_lowincome)
+model7_pre_lowincome$coefficients
+
+Pred11_highincome <- predict(model7_pre_highincome, newdata = V2)
+Pred11_lowincome <- predict(model7_pre_lowincome, newdata = V2)
+
+length(Pred11_lowincome)
+Pred11_highincome[1,2]
+
+Pred11_allincome <- Pred11_highincome
+
+for(i in 1:nrow(Pred11_highincome)){
+  for (j in 1:4){
+    Pred11_allincome[i,j] <- (Pred11_highincome[i,j]+Pred11_lowincome[i,j])/2
+  }
+}
+
+PredictChoice11avg <- apply(Pred11_allincome, 1, which.max)
+
+PredictChoice11highincome <- apply(Pred11_highincome, 1, which.max)
+PredictChoice11lowincome <- apply(Pred11_lowincome, 1, which.max)
+
+prediction_score(ActualChoice, Pred7_pre)
+prediction_score(ActualChoice, Pred11_allincome)
+prediction_score(ActualChoice, Pred11_highincome)
+prediction_score(ActualChoice, Pred11_lowincome)
+
+
+
+```
+
+```{r model15 with segment split}
+
+model7_pre_fullsize <- mlogit(Choice~CC+GN+NS+BU+FA+LD+BZ+FC+FP+RP+PP+KA+SC+TS+NV+MA+LB+AF+HU+Price -1| gender+miles+night+age+Urb, data = D2fullsize_pickup)
+model7_pre_midsize_car <- mlogit(Choice~CC+GN+NS+BU+FA+LD+BZ+FC+FP+RP+PP+KA+SC+TS+NV+MA+LB+AF+HU+Price -1| gender+miles+night+age+Urb, data = D2midsize_car)
+model7_pre_midsize_utility <- mlogit(Choice~CC+GN+NS+BU+FA+LD+BZ+FC+FP+RP+PP+KA+SC+TS+NV+MA+LB+AF+HU+Price -1| gender+miles+night+age+Urb, data = D2midsize_utility)
+model7_pre_luxury_utility <- mlogit(Choice~CC+GN+NS+BU+FA+LD+BZ+FC+FP+RP+PP+KA+SC+TS+NV+MA+LB+AF+HU+Price -1| gender+miles+night+age+Urb, data = D2luxury_utility)
+model7_pre_luxury_sedan <- mlogit(Choice~CC+GN+NS+BU+FA+LD+BZ+FC+FP+RP+PP+KA+SC+TS+NV+MA+LB+AF+HU+Price -1| gender+miles+night+age+Urb, data = D2luxury_sedan)
+model7_pre_small_car <- mlogit(Choice~CC+GN+NS+BU+FA+LD+BZ+FC+FP+RP+PP+KA+SC+TS+NV+MA+LB+AF+HU+Price -1| gender+miles+night+age+Urb, data = D2small_car)
+
+
+
+Pred11_fullsize <- predict(model7_pre_fullsize, newdata = V2)
+Pred11_midsize_car <- predict(model7_pre_midsize_car, newdata = V2)
+Pred11_midsize_utility <- predict(model7_pre_midsize_utility, newdata = V2)
+Pred11_luxury_utilty <- predict(model7_pre_luxury_utility, newdata = V2)
+Pred11_luxury_sedan <- predict(model7_pre_luxury_sedan, newdata = V2)
+Pred11_small_car <- predict(model7_pre_small_car, newdata = V2)
+
+
+
+Pred11_allsegments <- Pred11_fullsize
+
+for(i in 1:nrow(Pred11_fullsize)){
+  for (j in 1:4){
+    Pred11_allsegments[i,j] <- (Pred11_fullsize[i,j]+Pred11_midsize_car[i,j]+Pred11_midsize_utility[i,j]+Pred11_luxury_utilty[i,j]+Pred11_luxury_sedan[i,j]+Pred11_small_car[i,j])/6
+  }
+}
+
+PredictChoice11avg <- apply(Pred11_allincome, 1, which.max)
+
+PredictChoice11highincome <- apply(Pred11_highincome, 1, which.max)
+PredictChoice11lowincome <- apply(Pred11_lowincome, 1, which.max)
+
+prediction_score(ActualChoice, Pred7_pre)
+prediction_score(ActualChoice, Pred11_allsegments)
+prediction_score(ActualChoice, Pred11_fullsize)
+prediction_score(ActualChoice, Pred11_midsize_car)
+prediction_score(ActualChoice, Pred11_midsize_utility)
+prediction_score(ActualChoice, Pred11_luxury_utilty)
+prediction_score(ActualChoice, Pred11_luxury_sedan)
+prediction_score(ActualChoice, Pred11_small_car)
+
+```
+
+
+#use low income and all ages!
+
+```{r combine income and age}
+
+
+Pred11_allageincome <- Pred11_allages
+
+for(i in 1:nrow(Pred11_allageincome)){
+  for (j in 1:4){
+    Pred11_allageincome[i,j] <- (Pred11_allages[i,j]+Pred11_lowincome[i,j])/2
+  }
+}
+
+prediction_score(ActualChoice, Pred7_pre)
+prediction_score(ActualChoice, Pred11_allages)
+prediction_score(ActualChoice, Pred11_lowincome)
+prediction_score(ActualChoice, Pred11_allageincome)
+
+```
+
+```{r income age and midsize car}
+
+Pred11_allageincome_midsizecar <- Pred11_allages
+
+for(i in 1:nrow(Pred11_allageincome_midsizecar)){
+  for (j in 1:4){
+    Pred11_allageincome_midsizecar[i,j] <- (Pred11_allages[i,j]+Pred11_lowincome[i,j]+Pred11_midsize_car[i,j])/2
+  }
+}
+
+prediction_score(ActualChoice, Pred7_pre)
+prediction_score(ActualChoice, Pred11_allages)
+prediction_score(ActualChoice, Pred11_lowincome)
+prediction_score(ActualChoice, Pred11_allageincome_midsizecar)
+
+
+```
+
 
 ```{r validate model 8}
 set.seed(1)
@@ -1009,5 +1361,49 @@ for(i in 1:10){
 ```
 
 We establish that k = 2 is best but loses to baseline model
+###Using pnn
+```{r pnn code}
+#D2copy <- D2
+#V2copy <- V2
+D2 <- D2copy
+V2 <- V2copy
+str(D2$Ch1)
+
+D2$Choice <- ifelse(D2$Ch1 == 1, D2$Choice <- "Ch1", ifelse(D2$Ch2 == 1, D2$Choice <- "Ch2", ifelse(D2$Ch3 ==1, D2$Choice <- "Ch3", ifelse(D2$Ch4==1, D2$Choice <- "Ch4", "NA"))))
+
+str(D2)
+
+t.df_pre <- subset(D2, select=c(19,5:10,12:14,20:40))
+t.df <- data.frame(t.df_pre)
+
+#install.packages("pnn")
+library(pnn)
+
+train <- learn(t.df)
+fit <- smooth(train)
+#install.packages("rgenoud")
+str(t.df$Choice)
+summary(train)
+?smooth
+?pnn
 
 
+V2$Choice <- ifelse(V2$Ch1 == 1, V2$Choice <- "Ch1", ifelse(V2$Ch2 == 1, V2$Choice <- "Ch2", ifelse(V2$Ch3 ==1, V2$Choice <- "Ch3", ifelse(V2$Ch4==1, V2$Choice <- "Ch4", "NA"))))
+
+q.df_pre <- subset(V2, select=c(19,5:10,12:14,20:40))
+names(q.df_pre)
+q.df <- data.frame(q.df_pre)
+train$categories
+
+n <- nrow(q.df)
+Q <- rep(0, n)
+for (i in 1:n) {
+print(i)
+  
+Q[i] <- guess(fit, as.matrix(q.df[i,1:2]))$probabilities
+    }
+    R <- data.frame(q.df, Q, stringsAsFactors = FALSE)
+    P <- subset(R, Q == 1)
+    N <- subset(R, Q == 0)
+Q
+```
