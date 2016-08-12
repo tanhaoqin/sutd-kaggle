@@ -956,5 +956,49 @@ for(i in 1:10){
 ```
 
 We establish that k = 2 is best but loses to baseline model
+###Using pnn
+```{r pnn code}
+#D2copy <- D2
+#V2copy <- V2
+D2 <- D2copy
+V2 <- V2copy
+str(D2$Ch1)
+
+D2$Choice <- ifelse(D2$Ch1 == 1, D2$Choice <- "Ch1", ifelse(D2$Ch2 == 1, D2$Choice <- "Ch2", ifelse(D2$Ch3 ==1, D2$Choice <- "Ch3", ifelse(D2$Ch4==1, D2$Choice <- "Ch4", "NA"))))
+
+str(D2)
+
+t.df_pre <- subset(D2, select=c(19,5:10,12:14,20:40))
+t.df <- data.frame(t.df_pre)
+
+#install.packages("pnn")
+library(pnn)
+
+train <- learn(t.df)
+fit <- smooth(train)
+#install.packages("rgenoud")
+str(t.df$Choice)
+summary(train)
+?smooth
+?pnn
 
 
+V2$Choice <- ifelse(V2$Ch1 == 1, V2$Choice <- "Ch1", ifelse(V2$Ch2 == 1, V2$Choice <- "Ch2", ifelse(V2$Ch3 ==1, V2$Choice <- "Ch3", ifelse(V2$Ch4==1, V2$Choice <- "Ch4", "NA"))))
+
+q.df_pre <- subset(V2, select=c(19,5:10,12:14,20:40))
+names(q.df_pre)
+q.df <- data.frame(q.df_pre)
+train$categories
+
+n <- nrow(q.df)
+Q <- rep(0, n)
+for (i in 1:n) {
+print(i)
+  
+Q[i] <- guess(fit, as.matrix(q.df[i,1:2]))$probabilities
+    }
+    R <- data.frame(q.df, Q, stringsAsFactors = FALSE)
+    P <- subset(R, Q == 1)
+    N <- subset(R, Q == 0)
+Q
+```
