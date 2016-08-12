@@ -243,12 +243,6 @@ ActualChoice2 <- subset(train2, Task > 12)[,"Choice"]
 
 ```
 
-```{r data visualisation}
-
-
-```
-
-
 
 ```{r seperating by gender}
 A2male <- mlogit.data(subset(train2, train2$gender==1), shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
@@ -677,17 +671,15 @@ model7_pre_male$coefficients
 summary(model7_pre_female)
 model7_pre_female$coefficients
 
-Pred11_male <- predict(model7_pre_male, newdata = V2)
-Pred11_female <- predict(model7_pre, newdata = V2)
-length(Pred11_female)
-Pred11_male[1,2]
+Pred11_maleV2 <- predict(model7_pre_male, newdata = V2)
+Pred11_femaleV2 <- predict(model7_pre_female, newdata = V2)
 
 # Orginal 
-Pred11_tgt <- Pred11_male
+Pred11_tgt <- Pred11_maleV2
 
-for(i in 1:nrow(Pred11_male)){
+for(i in 1:nrow(Pred11_maleV2)){
   for (j in 1:4){
-    Pred11_tgt[i,j] <- (Pred11_male[i,j]+Pred11_female[i,j])/2
+    Pred11_tgt[i,j] <- (Pred11_maleV2[i,j]+Pred11_femaleV2[i,j])/2
   }
 }
 
@@ -696,7 +688,7 @@ v2male_raw = subset(train2,Task > 12 & gender==1)
 v2female_raw = subset(train2,Task > 12 & gender==0)
 Pred11_male <- data.frame(predict(model7_pre_male, newdata = V2male))
 Pred11_female <- data.frame(predict(model7_pre, newdata = V2female))
-Pred11_split <- data.frame(No = subset(train2,Task>12)[,"No"])
+Pred11_gender_split <- data.frame(No = subset(train2,Task>12)[,"No"])
 for(i in 1:nrow(v2male_raw)){
   Pred11_male$No[i] <- v2male_raw[i,"No"]
 }
@@ -704,8 +696,8 @@ for(i in 1:nrow(v2female_raw)){
   Pred11_female$No[i] <- v2female_raw[i,"No"]
 }
 s <- rbind(Pred11_male,Pred11_female)
-Pred11_split = merge(x = Pred11_split, y = s, by = "No")
-Pred11_split <- Pred11_split[,-(1)]
+Pred11_gender_split = merge(x = Pred11_gender_split, y = s, by = "No")
+Pred11_gender_split <- Pred11_gender_split[,-(1)]
 
 
 PredictChoice11avg <- apply(Pred11_tgt, 1, which.max)
@@ -713,13 +705,11 @@ PredictChoice11avg <- apply(Pred11_tgt, 1, which.max)
 PredictChoice11male <- apply(Pred11_male, 1, which.max)
 PredictChoice11female <- apply(Pred11_female, 1, which.max)
 
-# prediction_score(ActualChoice2, Pred7_pre)
-# prediction_score(ActualChoice2, Pred11_tgt)
-# prediction_score(ActualChoice2, Pred11_male)
-# prediction_score(ActualChoice2female, Pred11_female)
-
+prediction_score(ActualChoice2, Pred7_pre)
+prediction_score(ActualChoice2, Pred11_maleV2)
+prediction_score(ActualChoice2female, Pred11_femaleV2)
 prediction_score(ActualChoice2, Pred11_tgt)
-prediction_score(ActualChoice2, Pred11_split)
+prediction_score(ActualChoice2, Pred11_gender_split)
 ```
 
 
@@ -733,25 +723,24 @@ model7_pre_old$coefficients
 summary(model7_pre_young)
 model7_pre_young$coefficients
 
-Pred11_old <- predict(model7_pre_old, newdata = V2)
-Pred11_young <- predict(model7_pre, newdata = V2)
-length(Pred11_young)
-Pred11_old[1,2]
+Pred11_oldV2 <- predict(model7_pre_old, newdata = V2)
+Pred11_youngV2 <- predict(model7_pre_young, newdata = V2)
 
-Pred11_allages <- Pred11_old
+Pred11_allages <- Pred11_oldV2
 
-for(i in 1:nrow(Pred11_old)){
+for(i in 1:nrow(Pred11_oldV2)){
   for (j in 1:4){
-    Pred11_allages[i,j] <- (Pred11_old[i,j]+Pred11_young[i,j])/2
+    Pred11_allages[i,j] <- (Pred11_oldV2[i,j]+Pred11_youngV2[i,j])/2
   }
 }
 
 # Split data set while keeping id (Number)
 v2young_raw = subset(train2,Task > 12 & age<36)
 v2old_raw = subset(train2,Task > 12 & age>35)
-Pred11_old <- data.frame(predict(model7_pre_male, newdata = V2young))
-Pred11_young <- data.frame(predict(model7_pre, newdata = V2old))
-Pred11_split <- data.frame(No = subset(train2,Task>12)[,"No"])
+Pred11_old <- data.frame(predict(model7_pre_old, newdata = V2old))
+Pred11_young <- data.frame(predict(model7_pre_young, newdata = V2young))
+Pred11_age_split <- data.frame(No = subset(train2,Task>12)[,"No"])
+
 for(i in 1:nrow(v2young_raw)){
   Pred11_young$No[i] <- v2young_raw[i,"No"]
 }
@@ -759,8 +748,8 @@ for(i in 1:nrow(v2old_raw)){
   Pred11_old$No[i] <- v2old_raw[i,"No"]
 }
 s <- rbind(Pred11_old,Pred11_young)
-Pred11_split = merge(x = Pred11_split, y = s, by = "No")
-Pred11_split <- Pred11_split[,-(1)]
+Pred11_age_split = merge(x = Pred11_age_split, y = s, by = "No")
+Pred11_age_split <- Pred11_age_split[,-(1)]
 
 PredictChoice11avg <- apply(Pred11_allages, 1, which.max)
 
@@ -769,12 +758,13 @@ PredictChoice11young <- apply(Pred11_young, 1, which.max)
 
 #prediction_score(ActualChoice, Pred7_pre)
 #prediction_score(ActualChoice, Pred11_allages)
-#prediction_score(ActualChoice, Pred11_old)
-#prediction_score(ActualChoice, Pred11_young)
-
+prediction_score(ActualChoice, Pred11_oldV2)
+prediction_score(ActualChoice, Pred11_youngV2)
+prediction_score(ActualChoice,Pred7_pre)
 prediction_score(ActualChoice, Pred11_allages)
-prediction_score(ActualChoice, Pred11_split)
+prediction_score(ActualChoice, Pred11_age_split)
 ```
+
 
 ```{r model13 with night split}
 model7_pre_morenight <- mlogit(Choice~CC+GN+NS+BU+FA+LD+BZ+FC+FP+RP+PP+KA+SC+TS+NV+MA+LB+AF+HU+Price -1| gender+miles+night+age+Urb, data = D2morenight)
@@ -824,19 +814,36 @@ model7_pre_highincome$coefficients
 summary(model7_pre_lowincome)
 model7_pre_lowincome$coefficients
 
-Pred11_highincome <- predict(model7_pre_highincome, newdata = V2)
-Pred11_lowincome <- predict(model7_pre_lowincome, newdata = V2)
+Pred11_highincomeV2 <- predict(model7_pre_highincome, newdata = V2)
+Pred11_lowincomeV2 <- predict(model7_pre_lowincome, newdata = V2)
 
-length(Pred11_lowincome)
-Pred11_highincome[1,2]
 
-Pred11_allincome <- Pred11_highincome
+Pred11_allincome <- Pred11_highincomeV2
 
-for(i in 1:nrow(Pred11_highincome)){
+for(i in 1:nrow(Pred11_highincomeV2)){
   for (j in 1:4){
-    Pred11_allincome[i,j] <- (Pred11_highincome[i,j]+Pred11_lowincome[i,j])/2
+    Pred11_allincome[i,j] <- (Pred11_highincomeV2[i,j]+Pred11_lowincomeV2[i,j])/2
   }
 }
+
+
+# Split data set while keeping id (Number)
+v2lowincome_raw = subset(train2,Task > 12 & income<200001)
+v2highincome_raw = subset(train2,Task > 12 & income>200000)
+Pred11_highincome <- data.frame(predict(model7_pre_highincome, newdata = V2highincome))
+Pred11_lowincome <- data.frame(predict(model7_pre_lowincome, newdata = V2lowincome))
+Pred11_income_split <- data.frame(No = subset(train2,Task>12)[,"No"])
+
+for(i in 1:nrow(v2lowincome_raw)){
+  Pred11_lowincome$No[i] <- v2lowincome_raw[i,"No"]
+}
+for(i in 1:nrow(v2highincome_raw)){
+  Pred11_highincome$No[i] <- v2highincome_raw[i,"No"]
+}
+s <- rbind(Pred11_highincome,Pred11_lowincome)
+Pred11_income_split = merge(x = Pred11_income_split, y = s, by = "No")
+Pred11_income_split <- Pred11_income_split[,-(1)]
+
 
 PredictChoice11avg <- apply(Pred11_allincome, 1, which.max)
 
@@ -845,8 +852,9 @@ PredictChoice11lowincome <- apply(Pred11_lowincome, 1, which.max)
 
 prediction_score(ActualChoice, Pred7_pre)
 prediction_score(ActualChoice, Pred11_allincome)
-prediction_score(ActualChoice, Pred11_highincome)
-prediction_score(ActualChoice, Pred11_lowincome)
+prediction_score(ActualChoice, Pred11_highincomeV2)
+prediction_score(ActualChoice, Pred11_lowincomeV2)
+prediction_score(ActualChoice, Pred11_income_split)
 
 
 
@@ -863,36 +871,77 @@ model7_pre_small_car <- mlogit(Choice~CC+GN+NS+BU+FA+LD+BZ+FC+FP+RP+PP+KA+SC+TS+
 
 
 
-Pred11_fullsize <- predict(model7_pre_fullsize, newdata = V2)
-Pred11_midsize_car <- predict(model7_pre_midsize_car, newdata = V2)
-Pred11_midsize_utility <- predict(model7_pre_midsize_utility, newdata = V2)
-Pred11_luxury_utilty <- predict(model7_pre_luxury_utility, newdata = V2)
-Pred11_luxury_sedan <- predict(model7_pre_luxury_sedan, newdata = V2)
-Pred11_small_car <- predict(model7_pre_small_car, newdata = V2)
+Pred11_fullsizeV2 <- predict(model7_pre_fullsize, newdata = V2)
+Pred11_midsize_carV2 <- predict(model7_pre_midsize_car, newdata = V2)
+Pred11_midsize_utilityV2 <- predict(model7_pre_midsize_utility, newdata = V2)
+Pred11_luxury_utiltyV2 <- predict(model7_pre_luxury_utility, newdata = V2)
+Pred11_luxury_sedanV2 <- predict(model7_pre_luxury_sedan, newdata = V2)
+Pred11_small_carV2 <- predict(model7_pre_small_car, newdata = V2)
 
 
 
-Pred11_allsegments <- Pred11_fullsize
+Pred11_allsegments <- Pred11_fullsizeV2
 
-for(i in 1:nrow(Pred11_fullsize)){
+for(i in 1:nrow(Pred11_fullsizeV2)){
   for (j in 1:4){
-    Pred11_allsegments[i,j] <- (Pred11_fullsize[i,j]+Pred11_midsize_car[i,j]+Pred11_midsize_utility[i,j]+Pred11_luxury_utilty[i,j]+Pred11_luxury_sedan[i,j]+Pred11_small_car[i,j])/6
+    Pred11_allsegments[i,j] <- (Pred11_fullsizeV2[i,j]+Pred11_midsize_carV2[i,j]+Pred11_midsize_utilityV2[i,j]+Pred11_luxury_utiltyV2[i,j]+Pred11_luxury_sedanV2[i,j]+Pred11_small_carV2[i,j])/6
   }
 }
 
-PredictChoice11avg <- apply(Pred11_allincome, 1, which.max)
+# Split data set while keeping id (Number)
+v2fullsize_raw = subset(train2,Task > 12 & train2$segment=="Full-size Pickup")
+v2midsize_car_raw = subset(train2,Task > 12 & train2$segment=="Midsize Car")
+v2midsize_utility_raw = subset(train2,Task > 12 & train2$segment=="Midsize Luxury Utility segements")
+v2luxury_utility_raw = subset(train2,Task > 12 & train2$segment=="Midsize Utility")
+v2luxury_sedan_raw = subset(train2,Task > 12 & train2$segment=="Prestige Luxury Sedan")
+v2small_car_raw = subset(train2,Task > 12 & train2$segment=="Small Car")
 
-PredictChoice11highincome <- apply(Pred11_highincome, 1, which.max)
-PredictChoice11lowincome <- apply(Pred11_lowincome, 1, which.max)
+
+
+Pred11_fullsize <- data.frame(predict(model7_pre_fullsize, newdata = v2fullsize_raw))
+Pred11_midsize_car <- data.frame(predict(model7_pre_midsize_car, newdata = v2midsize_car_raw))
+Pred11_midsize_utility <- data.frame(predict(model7_pre_midsize_utility, newdata = v2midsize_utility_raw))
+Pred11_luxury_utilty <- data.frame(predict(model7_pre_luxury_utility, newdata = v2luxury_utility_raw))
+Pred11_luxury_sedan <- data.frame(predict(model7_pre_luxury_sedan, newdata = v2luxury_sedan_raw))
+Pred11_small_car <- data.frame(predict(model7_pre_small_car, newdata = v2small_car_raw))
+
+
+Pred11_segment_split <- data.frame(No = subset(train2,Task>12)[,"No"])
+
+
+for(i in 1:nrow(v2fullsize_raw)){
+  Pred11_fullsize$No[i] <- v2fullsize_raw[i,"No"]
+}
+for(i in 1:nrow(v2midsize_car_raw)){
+  Pred11_midsize_car$No[i] <- v2midsize_car_raw[i,"No"]
+}
+for(i in 1:nrow(v2midsize_utility_raw)){
+  Pred11_midsize_utility$No[i] <- v2midsize_utility_raw[i,"No"]
+}
+for(i in 1:nrow(v2luxury_utility_raw)){
+  Pred11_luxury_utilty$No[i] <- v2luxury_utility_raw[i,"No"]
+}
+for(i in 1:nrow(v2luxury_sedan_raw)){
+  Pred11_luxury_sedan$No[i] <- v2luxury_sedan_raw[i,"No"]
+}
+for(i in 1:nrow(v2small_car_raw)){
+  Pred11_small_car$No[i] <- v2small_car_raw[i,"No"]
+}
+s <- rbind(Pred11_fullsize,Pred11_midsize_car,Pred11_midsize_utility,Pred11_luxury_utilty,Pred11_luxury_sedan,Pred11_small_car)
+Pred11_segment_split = merge(x = Pred11_segment_split, y = s, by = "No")
+Pred11_segment_split <- Pred11_segment_split[,-(1)]
+
+
 
 prediction_score(ActualChoice, Pred7_pre)
 prediction_score(ActualChoice, Pred11_allsegments)
-prediction_score(ActualChoice, Pred11_fullsize)
-prediction_score(ActualChoice, Pred11_midsize_car)
-prediction_score(ActualChoice, Pred11_midsize_utility)
-prediction_score(ActualChoice, Pred11_luxury_utilty)
-prediction_score(ActualChoice, Pred11_luxury_sedan)
-prediction_score(ActualChoice, Pred11_small_car)
+prediction_score(ActualChoice, Pred11_segment_split)
+prediction_score(ActualChoice, Pred11_fullsizeV2)
+prediction_score(ActualChoice, Pred11_midsize_carV2)
+prediction_score(ActualChoice, Pred11_midsize_utilityV2)
+prediction_score(ActualChoice, Pred11_luxury_utiltyV2)
+prediction_score(ActualChoice, Pred11_luxury_sedanV2)
+prediction_score(ActualChoice, Pred11_small_carV2)
 
 ```
 
