@@ -242,6 +242,34 @@ V2 <- mlogit.data(subset(train2, Task > 12), shape = 'wide', choice = "Choice", 
 ActualChoice2 <- subset(train2, Task > 12)[,"Choice"]
 ```
 
+```{r data visualisation}
+
+
+```
+
+
+
+```{r seperating by gender}
+A2male <- mlogit.data(subset(train2, train2$gender==1), shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
+
+A2female <- mlogit.data(subset(train2, train2$gender==0), shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
+
+D2male <- mlogit.data(subset(train2, Task <= 12 & gender==1), shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
+
+D2female <- mlogit.data(subset(train2, Task <= 12 & gender==0), shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
+
+V2male <- mlogit.data(subset(train2, Task > 12 & gender==1), shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
+ActualChoice2 <- subset(train2, Task > 12)[,"Choice"]
+
+V2female <- mlogit.data(subset(train2, Task > 12 & gender==0), shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
+ActualChoice2 <- subset(train2, Task > 12)[,"Choice"]
+ActualChoice2male <- subset(train2, Task > 12 & gender ==1)[,"Choice"]
+ActualChoice2female <- subset(train2, Task > 12 & gender ==0)[,"Choice"]
+```
+
+
+
+
 ```{r generating data for proper cross validation}
 
 start <- c(1, 4, 7, 10, 13, 16)
@@ -527,6 +555,45 @@ prediction_score(ActualChoice2,Pred7_2star)
 prediction_score(ActualChoice2,Pred7_1star)
 
 ```
+
+```{r model11 with gender split}
+model7_pre_male <- mlogit(Choice~CC+GN+NS+BU+FA+LD+BZ+FC+FP+RP+PP+KA+SC+TS+NV+MA+LB+AF+HU+Price -1| miles+night+age+Urb, data = D2male)
+
+model7_pre_female <- mlogit(Choice~CC+GN+NS+BU+FA+LD+BZ+FC+FP+RP+PP+KA+SC+TS+NV+MA+LB+AF+HU+Price -1| miles+night+age+Urb, data = D2female)
+
+
+summary(model7_pre_male)
+model7_pre_male$coefficients
+summary(model7_pre_female)
+model7_pre_female$coefficients
+
+Pred11_male <- predict(model7_pre_male, newdata = V2)
+Pred11_female <- predict(model7_pre, newdata = V2)
+length(Pred11_female)
+Pred11_male[1][1]
+
+Pred11_tgt <- Pred11_male
+
+##something wrong with this loop
+for(i in 1:length(Pred11_male)){
+  for (j in 1:4){
+    Pred11_tgt[i][j] <- mean(Pred11_male[i][j],Pred11_female[i][j])
+  }
+}
+
+
+PredictChoice11male <- apply(Pred11_male, 1, which.max)
+PredictChoice11female <- apply(Pred11_female, 1, which.max)
+
+prediction_score(ActualChoice2, Pred7_pre)
+prediction_score(ActualChoice2male, Pred11_male)
+prediction_score(ActualChoice2female, Pred11_female)
+
+t8 <- table(ActualChoice2, PredictChoice8)
+
+
+```
+
 
 ```{r validate model 8}
 set.seed(1)
