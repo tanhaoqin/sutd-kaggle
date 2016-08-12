@@ -263,6 +263,11 @@ for (i in 1:6){
 
 ```{r cv}
 
+coef1 <- NA
+coef2 <- NA
+coef3 <- NA
+coef4 <- NA
+
 cvmodel1Vector <- vector(mode = "list", length = 6)
 cvmodel2Vector <- vector(mode = "list", length = 6)
 cvmodel3Vector <- vector(mode = "list", length = 6)
@@ -275,11 +280,11 @@ score4 <- c()
 for (i in 1:6){
   cvmodel1Vector[[i]] <- mlogit(Choice~CC+GN+NS+BU+FA+LD+BZ+FC+FP+RP+PP+KA+SC+TS+NV+MA+LB+AF+HU+Price -1| gender+miles+night+age+Urb, data = trainVector[[i]])
 
-  cvmodel2Vector[[i]] <- mlogit(Choice~GN+NS+BU+FA+LD+BZ+FC+FP+RP+PP+KA+SC+TS+NV+MA+LB+AF+HU+Price -1| gender+miles+night+age+Urb, data = trainVector[[i]])
+  cvmodel2Vector[[i]] <- mlogit(Choice~GN+NS+BU+FA+LD+BZ+FC+FP+RP+PP+KA+SC+TS+NV+MA+LB+AF+HU+Price -1| gender+age+Urb, data = trainVector[[i]], reflevel = "Ch4")
   
-  cvmodel3Vector[[i]] <- mlogit(Choice~CC+GN+NS+FA+LD+BZ+FC+FP+RP+PP+KA+SC+TS+NV+MA+LB+AF+HU+Price -1| gender+miles+night+age+Urb, data = trainVector[[i]])
+  cvmodel3Vector[[i]] <- mlogit(Choice~GN+NS+BU+FA+LD+BZ+FC+FP+RP+PP+KA+SC+TS+NV+MA+LB+AF+HU+Price -1| gender+age+Urb, data = trainVector[[i]])
   
-  cvmodel4Vector[[i]] <- mlogit(Choice~CC+GN+NS+BU+FA+LD+BZ+FC+FP+RP+PP+SC+TS+NV+MA+LB+AF+HU+Price -1| gender+miles+night+age+Urb, data = trainVector[[i]])
+  cvmodel4Vector[[i]] <- mlogit(Choice~GN+NS+BU+FA+LD+BZ+FC+FP+RP+PP+KA+SC+TS+NV+MA+LB+AF+HU+Price -1| gender+age+Urb, data = trainVector[[i]])
   
   predictmodel1 <- predict(cvmodel1Vector[[i]], newdata = validateVector[[i]])
   predictmodel2 <- predict(cvmodel2Vector[[i]], newdata = validateVector[[i]])
@@ -291,6 +296,17 @@ for (i in 1:6){
   score3 <- c(score3, prediction_score(actualVector[[i]], predictmodel3))
   score4 <- c(score4, prediction_score(actualVector[[i]], predictmodel4))
   
+  if(is.na(coef1)){
+    coef1 <- summary(cvmodel1Vector[[i]])$CoefTable[,4]
+    coef2 <- summary(cvmodel2Vector[[i]])$CoefTable[,4]
+    coef3 <- summary(cvmodel3Vector[[i]])$CoefTable[,4]
+    coef4 <- summary(cvmodel4Vector[[i]])$CoefTable[,4]
+  } else {
+    coef1 <- pmin(summary(cvmodel1Vector[[i]])$CoefTable[,4],coef1)
+    coef2 <- pmin(summary(cvmodel2Vector[[i]])$CoefTable[,4],coef2)
+    coef3 <- pmin(summary(cvmodel3Vector[[i]])$CoefTable[,4],coef3)
+    coef4 <- pmin(summary(cvmodel4Vector[[i]])$CoefTable[,4],coef4)
+  }
 }
 
 #model1
@@ -721,6 +737,22 @@ for(i in 1:1){
 accurate_cnt/4550
 ```
 
+```{r}
+model11 <- mlogit(Choice~GN+NS+BU+FA+LD+BZ+FC+FP+RP+PP+KA+SC+TS+NV+MA+LB+AF+HU+Price -1| gender+age+Urb, data = A2)
+
+predict11 <- predict(model11, newdata = test2)
+
+
+#write file
+Submission11 <- submission
+for (i in 1:nrow(predict11)){
+  for (j in colnames(predict11)){
+    Submission11[i,j] = predict11[i,j]
+  }
+}
+write.csv(Submission11, file = 'Submission11.csv')
+```
+
 
 ##CART
 
@@ -748,10 +780,10 @@ prp(cart2)
 ```{r pre-processing data}
 
 #ClusterTrainData <- train[train$Task == 1,c(84,86:94)]
-ClusterTrainData <- train[train$Task == 1,c(84,86:89,91:92)]
+ClusterTrainData <- train[train$Task == 1,c(88:89,92)]
 fac <- factor(c())
 levels <- c()
-for(i in colnames(ClusterTrainData)){
+for(i in c('gender', 'age', 'Urb')){
   #print(levels(ClusterTrainData[,i]))
   fac <- union(fac, levels(ClusterTrainData[,i]))
 }
@@ -788,42 +820,63 @@ for(i in colnames(ClusterTestData)){
 ```
 
 ```{r clustering and modelling using kmeans & numerical variables}
-for(i in 1:10){
+actualVector <- vector(mode = "list", length = 6)
+trainVector <- vector(mode = "list", length = 6)
+validateVector <- vector(mode = "list", length = 6)
+
+scores <- vector(mode="list", length = 10)
+
+for(i in 2:10){
   cluster <- kmeans(ClusterTrainData, centers = i)
   clusterTrain <- train
   clusterTest <- test
   clusterTrain$cluster <- cluster$cluster[clusterTrain$Case]
   clusterTest$cluster <- cluster$cluster[clusterTest$Case]
   models <- vector(mode = "list", length = i)
-  total_correct = 0
-  print(i)
-  for(j in 1:i){
-#    print(c('cluster',j))
-    filteredTrain <- clusterTrain[clusterTrain$cluster == j,]
-    #print(c('cluster',j,'length',nrow(filteredTrain)))
+
+
+  
+  start <- c(1, 4, 7, 10, 13, 16)
+  stop <- c(4, 7, 10, 13, 16, 19)
+  score_for_cluster_size = c()  
+  score <- c()
+  for (j in 1:6){
+    trainVector[[j]] <-subset(clusterTrain, Task >= start[j]&Task < stop[j]) 
+    validateVector[[j]] <-subset(clusterTrain, !(Task >= start[j]&Task < stop[j]))
+    actualVector[[j]] <-subset(clusterTrain, !(Task >= start[j]&Task < stop[j]))[,'Choice']
     
-    AC <- mlogit.data(filteredTrain, shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
-    
-    DC <- mlogit.data(subset(filteredTrain, Task <= 12), shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
-    
-    VC <- mlogit.data(subset(filteredTrain, Task > 12), shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
-    
-    ActualChoiceC <- subset(filteredTrain, Task > 12)[,"Choice"]
-    
-    modelC <- mlogit(Choice~CC+GN+NS+BU+FA+LD+BZ+FC+FP+RP+PP+KA+SC+TS+NV+MA+LB+AF+HU+Price-1, data = DC)
-    
-    predictC <- predict(modelC, newdata = VC)
-    PredictChoiceC <- apply(predictC, 1, which.max)
-    t <- table(PredictChoiceC, ActualChoiceC)
-    #print(t)
-    correct <- 0
-    for (choice in 1:4){
-      correct = correct + t[choice,choice]
+    temp <- validateVector[[j]]
+    temp$p1 <- 0
+    temp$p2 <- 0
+    temp$p3 <- 0
+    temp$p4 <- 0
+    for(k in 1:i){
+      filteredTrain <- trainVector[[j]]
+      filteredTrain <- filteredTrain[filteredTrain$cluster == k,]  
+      filteredV <- validateVector[[j]]
+      filteredV <- filteredV[filteredV$cluster == k,]  
+      
+      DC <- mlogit.data(filteredTrain, shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
+        
+      VC <- mlogit.data(filteredV, shape = 'wide', choice = "Choice", varying = c(4:83), sep = '', alt.levels = c("Ch1", "Ch2", "Ch3", "Ch4"), id.var = "Case")
+      
+      model1 <- mlogit(Choice~CC+GN+NS+BU+FA+LD+BZ+FC+FP+RP+PP+KA+SC+TS+NV+MA+LB+AF+HU+Price-1, data = DC)
+      
+      predictmodel1 <- predict(model1, newdata = VC)
+      l <- 1
+      for (row in temp[temp$cluster == k,]$No){
+          temp[temp$No == row,101] <- predictmodel1[l,1]
+          temp[temp$No == row,102] <- predictmodel1[l,2]
+          temp[temp$No == row,103] <- predictmodel1[l,3]
+          temp[temp$No == row,104] <- predictmodel1[l,4]
+          l <- l+1
+      }
     }
-    total_correct = total_correct + correct
-    #print(total_correct)
+    score <- c(score, prediction_score(actualVector[[j]], temp[,101:104]))
+    #print(c('cluster',j,'length',nrow(filteredTrain)))
+    #print(score)
   }
-  print(total_correct)
+  print(score)
 }
 
 ```
@@ -892,9 +945,9 @@ write.csv(Submission8, file = 'Submission8.csv')
 ###Using numbers
 
 ```{r pre-processing data}
-ClusterTrainData <- train2[train2$Task == 1,c(84,86:94)]
+ClusterTrainData <- train2[train2$Task == 1,c(88:89,92)]
 fac <- factor(c())
-for(i in c('segment', 'region')){
+for(i in c('gender', 'age', 'Urb')){
   #print(levels(ClusterTrainData[,i]))
   fac <- union(levels(ClusterTrainData[,i]), fac)
 }
